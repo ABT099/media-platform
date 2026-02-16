@@ -1,0 +1,5 @@
+/main
+/discovery-service
+/*.exe
+/*.test
+vendor/
