@@ -29,7 +29,7 @@ export const episodes = pgTable('episodes', {
   durationInSeconds: integer().notNull(),
   publicationDate: date(),
   mediaUrl: text().notNull(),
-  thumbnailUrl: text().notNull(),
+  thumbnailUrl: text(),
   episodeNumber: integer().notNull(),
   seasonNumber: integer(),
   createdAt: timestamp().defaultNow().notNull(),
