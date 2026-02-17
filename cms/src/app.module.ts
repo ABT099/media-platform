@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ProgramsModule } from './programs/programs.module';
 import { EpisodesModule } from './episodes/episodes.module';
 import { SearchModule } from './search/search.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { SearchModule } from './search/search.module';
     ProgramsModule,
     EpisodesModule,
     SearchModule,
+    SchedulerModule,
+    EventEmitterModule.forRoot(),
   ],
 })
 export class AppModule {}

@@ -5,19 +5,37 @@ import { programs, episodes } from 'src/database/schema';
 import { sql, eq } from 'drizzle-orm';
 import { UpdateProgramDto } from './dto/update-program.dto';
 import { SearchService } from '../search/search.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ProgramsService {
   constructor(
     @Inject(DB) private readonly db: DrizzleDB,
     private readonly searchService: SearchService,
+    private readonly storageService: StorageService,
   ) {}
 
-  async create(data: CreateProgramDto) {
+  async create(
+    data: CreateProgramDto,
+    coverImage?: Express.Multer.File,
+  ) {
+    // Upload cover image if provided
+    let coverImageUrl: string | undefined;
+    if (coverImage) {
+      coverImageUrl = await this.storageService.uploadPublicFile(
+        coverImage,
+        'thumbnails',
+      );
+    }
+
+    // Extract coverImage from DTO to avoid inserting it as a field
+    const { coverImage: _, ...programData } = data;
+
     const [program] = await this.db
       .insert(programs)
       .values({
-        ...data,
+        ...programData,
+        coverImageUrl,
       })
       .returning();
 
@@ -81,12 +99,29 @@ export class ProgramsService {
     };
   }
 
-  async update(id: string, data: UpdateProgramDto) {
+  async update(
+    id: string,
+    data: UpdateProgramDto,
+    coverImage?: Express.Multer.File,
+  ) {
+    // Upload cover image if provided
+    let coverImageUrl: string | undefined;
+    if (coverImage) {
+      coverImageUrl = await this.storageService.uploadPublicFile(
+        coverImage,
+        'thumbnails',
+      );
+    }
+
+    // Extract coverImage from DTO to avoid inserting it as a field
+    const { coverImage: _, ...programData } = data;
+
     const [program] = await this.db
       .update(programs)
       .set({
-        ...data,
-        updatedAt: sql`now()`,
+        ...programData,
+        ...(coverImageUrl && { coverImageUrl }),
+        updatedAt: new Date(),
       })
       .where(eq(programs.id, id))
       .returning();

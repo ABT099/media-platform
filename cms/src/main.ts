@@ -1,17 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
+  const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -27,8 +20,9 @@ async function bootstrap() {
       'Content Management System API for managing visual programs (podcasts, documentaries, series) and episodes',
     )
     .setVersion('1.0')
-    .addTag('programs', 'Program management endpoints')
-    .addTag('episodes', 'Episode management endpoints')
+    .addTag('programs', 'Program management endpoints - Create, read, update, and delete programs')
+    .addTag('episodes', 'Episode management endpoints - Manage episodes within programs')
+    .addTag('upload', 'File upload endpoints - Generate presigned URLs for direct S3 uploads')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

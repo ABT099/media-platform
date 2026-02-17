@@ -16,6 +16,8 @@ export const programTypeEnum = pgEnum('program_type', [
 
 export const languageEnum = pgEnum('language_code', ['ar', 'en']);
 
+export const statusEnum = pgEnum('status', ['draft', 'scheduled', 'published']);
+
 export const programs = pgTable(
   'programs',
   {
@@ -46,15 +48,22 @@ export const episodes = pgTable(
       .references(() => programs.id, { onDelete: 'cascade' }),
     durationInSeconds: integer().notNull(),
     publicationDate: timestamp(),
-    mediaUrl: text().notNull(),
+    videoUrl: text(),
     thumbnailUrl: text(),
     episodeNumber: integer().notNull(),
     seasonNumber: integer(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow(),
+    status: statusEnum().notNull().default('draft'),
   },
   (table) => [
     index('episodes_program_id_idx').on(table.programId),
+    index('episodes_status_idx').on(table.status),
+    index('episodes_publication_date_idx').on(table.publicationDate),
+    index('episodes_status_publication_date_idx').on(
+      table.status,
+      table.publicationDate,
+    ),
     uniqueIndex('unique_episode_per_season').on(
       table.programId,
       table.seasonNumber,

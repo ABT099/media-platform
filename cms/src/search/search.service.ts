@@ -58,12 +58,13 @@ export class SearchService implements OnModuleInit {
             properties: {
               id: { type: 'keyword' },
               programId: { type: 'keyword' },
-              title: { type: 'text', analyzer: 'standard' },
-              description: { type: 'text', analyzer: 'standard' },
-              duration: { type: 'integer' },
+              title: { type: 'text', analyzer: 'arabic' },
+              description: { type: 'text', analyzer: 'arabic' },
+              durationInSeconds: { type: 'integer' },
               publicationDate: { type: 'date' },
-              mediaUrl: { type: 'keyword' },
+              videoUrl: { type: 'keyword' },
               thumbnailUrl: { type: 'keyword' },
+              status: { type: 'keyword' },
               episodeNumber: { type: 'integer' },
               seasonNumber: { type: 'integer' },
               createdAt: { type: 'date' },
@@ -131,8 +132,9 @@ export class SearchService implements OnModuleInit {
           description: episode.description,
           durationInSeconds: episode.durationInSeconds,
           publicationDate: episode.publicationDate,
-          mediaUrl: episode.mediaUrl,
+          videoUrl: episode.videoUrl,
           thumbnailUrl: episode.thumbnailUrl,
+          status: episode.status,
           episodeNumber: episode.episodeNumber,
           seasonNumber: episode.seasonNumber,
           createdAt: episode.createdAt,
@@ -148,7 +150,11 @@ export class SearchService implements OnModuleInit {
   }
 
   async updateEpisode(episode: Episode) {
-    await this.indexEpisode(episode);
+    if (episode.status === 'published') {
+      await this.indexEpisode(episode);
+    } else {
+      await this.deleteEpisode(episode.id);
+    }
   }
 
   async deleteEpisode(id: string) {
