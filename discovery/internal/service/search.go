@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	searchCacheTTL  = 5 * time.Minute
-	detailCacheTTL  = 10 * time.Minute
-	defaultEpSize   = 20
-	indexPrograms   = "programs"
+	searchCacheTTL = 2 * time.Minute
+	detailCacheTTL = 3 * time.Minute
+	defaultEpSize  = 20
+	indexPrograms  = "programs"
 )
 
 type SearchService struct {
