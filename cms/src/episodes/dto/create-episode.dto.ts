@@ -4,9 +4,10 @@ import {
   IsOptional,
   IsInt,
   Min,
-  IsDateString,
+  IsDate,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateEpisodeDto {
   @ApiProperty({ description: 'Episode title' })
@@ -24,10 +25,14 @@ export class CreateEpisodeDto {
   @Min(0)
   durationInSeconds: number;
 
-  @ApiPropertyOptional({ description: 'Publication date (YYYY-MM-DD)' })
-  @IsDateString()
+  @ApiPropertyOptional({
+    description: 'Publication date (ISO 8601 format: YYYY-MM-DDTHH:mm:ssZ)',
+    example: '2024-02-17T14:30:00.000Z',
+  })
   @IsOptional()
-  publicationDate?: string;
+  @IsDate()
+  @Type(() => Date)
+  publicationDate?: Date;
 
   @ApiProperty({ description: 'Media URL (video/audio)' })
   @IsString()

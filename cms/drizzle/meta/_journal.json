@@ -15,6 +15,13 @@
       "when": 1771282996539,
       "tag": "0001_violet_flatman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771288769854,
+      "tag": "0002_tidy_blur",
+      "breakpoints": true
     }
   ]
 }

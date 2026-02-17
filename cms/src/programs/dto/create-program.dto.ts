@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsEnum,
-  IsOptional,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum ProgramType {
@@ -13,8 +7,13 @@ export enum ProgramType {
   SERIES = 'series',
 }
 
+export enum Language {
+  ARABIC = 'ar',
+  ENGLISH = 'en',
+}
+
 export class CreateProgramDto {
-  @ApiProperty({ description: 'Program title' })
+  @ApiProperty({ description: 'Program title', example: 'فنجان' })
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -24,23 +23,33 @@ export class CreateProgramDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ enum: ProgramType, description: 'Program type' })
+  @ApiProperty({
+    description: 'Program type',
+    enum: ProgramType,
+    enumName: 'ProgramType',
+    example: ProgramType.PODCAST,
+  })
   @IsEnum(ProgramType)
   @IsNotEmpty()
   type: ProgramType;
 
   @ApiProperty({
-    description: 'Program category (e.g., Technology, Culture, Business)',
+    description: 'Program category',
+    example: 'Culture',
   })
   @IsString()
   @IsNotEmpty()
   category: string;
 
-  @ApiProperty({ description: 'Program language (e.g., ar, en)' })
-  @IsString()
+  @ApiProperty({
+    description: 'Program language (ISO 639-1)',
+    enum: Language,
+    enumName: 'Language',
+    example: Language.ARABIC,
+  })
+  @IsEnum(Language)
   @IsNotEmpty()
-  @MaxLength(10)
-  language: string;
+  language: Language;
 
   @ApiPropertyOptional({ description: 'Cover image URL' })
   @IsString()

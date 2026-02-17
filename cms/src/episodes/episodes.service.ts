@@ -4,11 +4,13 @@ import { programs, episodes } from 'src/database/schema';
 import { sql, eq } from 'drizzle-orm';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
 import { UpdateEpisodeDto } from './dto/update-episode.dto';
+import { SearchService } from 'src/search/search.service';
 
 export class EpisodesService {
   constructor(
     @Inject(DB)
     private readonly db: DrizzleDB,
+    private readonly searchService: SearchService,
   ) {}
 
   async create(programId: string, createEpisodeDto: CreateEpisodeDto) {
@@ -30,6 +32,15 @@ export class EpisodesService {
         ...createEpisodeDto,
       })
       .returning();
+
+    try {
+      await this.searchService.indexEpisode(episode);
+    } catch (error) {
+      console.error(
+        `CRITICAL: DB saved Episode ${episode.id}, but Indexing failed:`,
+        error,
+      );
+    }
 
     return episode;
   }
@@ -89,6 +100,15 @@ export class EpisodesService {
       throw new NotFoundException(`Episode with ID ${id} not found`);
     }
 
+    try {
+      await this.searchService.updateEpisode(episode);
+    } catch (error) {
+      console.error(
+        `CRITICAL: DB updated Episode ${episode.id}, but Indexing failed:`,
+        error,
+      );
+    }
+
     return episode;
   }
 
@@ -100,6 +120,15 @@ export class EpisodesService {
 
     if (!episode) {
       throw new NotFoundException(`Episode with ID ${id} not found`);
+    }
+
+    try {
+      await this.searchService.deleteEpisode(episode.id);
+    } catch (error) {
+      console.error(
+        `CRITICAL: DB deleted Episode ${episode.id}, but Indexing failed:`,
+        error,
+      );
     }
 
     return { message: 'Episode deleted successfully', id };

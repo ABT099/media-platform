@@ -4,10 +4,14 @@ import { CreateProgramDto } from './dto/create-program.dto';
 import { programs, episodes } from 'src/database/schema';
 import { sql, eq } from 'drizzle-orm';
 import { UpdateProgramDto } from './dto/update-program.dto';
+import { SearchService } from '../search/search.service';
 
 @Injectable()
 export class ProgramsService {
-  constructor(@Inject(DB) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DB) private readonly db: DrizzleDB,
+    private readonly searchService: SearchService,
+  ) {}
 
   async create(data: CreateProgramDto) {
     const [program] = await this.db
@@ -16,6 +20,15 @@ export class ProgramsService {
         ...data,
       })
       .returning();
+
+    try {
+      await this.searchService.indexProgram(program);
+    } catch (error) {
+      console.error(
+        `CRITICAL: DB created Program ${program.id}, but Indexing failed:`,
+        error,
+      );
+    }
 
     return program;
   }
@@ -78,6 +91,19 @@ export class ProgramsService {
       .where(eq(programs.id, id))
       .returning();
 
+    if (!program) {
+      throw new NotFoundException(`Program with ID ${id} not found`);
+    }
+
+    try {
+      await this.searchService.updateProgram(program);
+    } catch (error) {
+      console.error(
+        `CRITICAL: DB updated Program ${program.id}, but Indexing failed:`,
+        error,
+      );
+    }
+
     return program;
   }
 
@@ -89,6 +115,15 @@ export class ProgramsService {
 
     if (!program) {
       throw new NotFoundException(`Program with ID ${id} not found`);
+    }
+
+    try {
+      await this.searchService.deleteProgram(program.id);
+    } catch (error) {
+      console.error(
+        `CRITICAL: DB deleted Program ${program.id}, but Indexing failed:`,
+        error,
+      );
     }
 
     return { message: 'Program deleted successfully', id };
