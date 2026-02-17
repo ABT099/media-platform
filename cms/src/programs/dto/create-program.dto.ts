@@ -1,16 +1,8 @@
 import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProgramType, Language } from 'src/common/enums/program.enums';
 
-export enum ProgramType {
-  PODCAST = 'podcast',
-  DOCUMENTARY = 'documentary',
-  SERIES = 'series',
-}
-
-export enum Language {
-  ARABIC = 'ar',
-  ENGLISH = 'en',
-}
+export { ProgramType, Language };
 
 export class CreateProgramDto {
   @ApiProperty({

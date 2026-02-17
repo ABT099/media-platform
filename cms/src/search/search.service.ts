@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Program, Episode } from '../database/schema';
 import { Client } from '@elastic/elasticsearch';
 
@@ -9,9 +10,11 @@ export class SearchService implements OnModuleInit {
   private readonly programsIndex = 'programs';
   private readonly episodesIndex = 'episodes';
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     this.client = new Client({
-      node: process.env.ELASTIC_NODE || 'http://localhost:9200',
+      node:
+        this.configService.get<string>('ELASTIC_NODE') ||
+        'http://localhost:9200',
     });
   }
 

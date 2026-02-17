@@ -3,11 +3,13 @@ import { ProgramsService } from './programs.service';
 import { ProgramsController } from './programs.controller';
 import { DatabaseModule } from '../database/database.module';
 import { StorageModule } from '../storage/storage.module';
+import { ProgramsRepository } from './programs.repository';
+import { EpisodesModule } from '../episodes/episodes.module';
 
 @Module({
-  imports: [DatabaseModule, StorageModule],
+  imports: [DatabaseModule, StorageModule, EpisodesModule],
   controllers: [ProgramsController],
-  providers: [ProgramsService],
-  exports: [ProgramsService],
+  providers: [ProgramsRepository, ProgramsService],
+  exports: [ProgramsRepository, ProgramsService],
 })
 export class ProgramsModule {}

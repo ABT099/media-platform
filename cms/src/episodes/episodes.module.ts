@@ -5,12 +5,17 @@ import { DatabaseModule } from '../database/database.module';
 import { EpisodeUploadListener } from './episode-upload.listener';
 import { StorageModule } from '../storage/storage.module';
 import { PublicationService } from './publication.service';
-import { SearchModule } from '../search/search.module';
+import { EpisodesRepository } from './episodes.repository';
 
 @Module({
-  imports: [DatabaseModule, StorageModule, SearchModule],
+  imports: [DatabaseModule, StorageModule],
   controllers: [EpisodesController],
-  providers: [EpisodesService, EpisodeUploadListener, PublicationService],
-  exports: [EpisodesService, PublicationService],
+  providers: [
+    EpisodesRepository,
+    EpisodesService,
+    EpisodeUploadListener,
+    PublicationService,
+  ],
+  exports: [EpisodesRepository, EpisodesService, PublicationService],
 })
 export class EpisodesModule {}

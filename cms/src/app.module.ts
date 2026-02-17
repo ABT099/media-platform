@@ -6,6 +6,7 @@ import { EpisodesModule } from './episodes/episodes.module';
 import { SearchModule } from './search/search.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { ImportModule } from './import/import.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     EpisodesModule,
     SearchModule,
     SchedulerModule,
+    ImportModule,
     EventEmitterModule.forRoot(),
   ],
 })

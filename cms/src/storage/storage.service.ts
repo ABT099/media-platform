@@ -70,6 +70,34 @@ export class StorageService {
   }
 
   /**
+   * Generates a presigned URL with a default key pattern and no ContentType restriction.
+   * Used during episode creation so the frontend can start uploading immediately.
+   * The URL expires in 1 hour; use generatePresignedUrl() as a fallback if it expires.
+   */
+  async generateDefaultPresignedUrl(episodeId: string) {
+    const fileKey = `episodes/${episodeId}/original`;
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: fileKey,
+      });
+
+      const signedUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn: 3600,
+      });
+
+      return {
+        uploadUrl: signedUrl,
+        fileKey,
+        publicUrl: `https://${this.cloudfrontDomain}/${fileKey}`,
+      };
+    } catch (error) {
+      this.logger.error('Error generating default presigned URL', error);
+      throw new InternalServerErrorException('Could not generate upload URL');
+    }
+  }
+
+  /**
    * Verifies that a file actually exists in S3.
    * Prevents users from submitting a fake "fileKey".
    */

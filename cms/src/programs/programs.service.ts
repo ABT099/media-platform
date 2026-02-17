@@ -1,25 +1,30 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DB, type DrizzleDB } from 'src/database/database.provider';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProgramDto } from './dto/create-program.dto';
-import { programs, episodes } from 'src/database/schema';
-import { sql, eq } from 'drizzle-orm';
 import { UpdateProgramDto } from './dto/update-program.dto';
-import { SearchService } from '../search/search.service';
 import { StorageService } from '../storage/storage.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  ProgramCreatedEvent,
+  ProgramUpdatedEvent,
+  ProgramDeletedEvent,
+} from 'src/common/events/program.events';
+import { ProgramsRepository } from './programs.repository';
+import { EpisodesRepository } from '../episodes/episodes.repository';
+import {
+  buildPaginatedResult,
+  toOffset,
+} from 'src/common/pagination/paginate';
 
 @Injectable()
 export class ProgramsService {
   constructor(
-    @Inject(DB) private readonly db: DrizzleDB,
-    private readonly searchService: SearchService,
+    private readonly programsRepository: ProgramsRepository,
+    private readonly episodesRepository: EpisodesRepository,
     private readonly storageService: StorageService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async create(
-    data: CreateProgramDto,
-    coverImage?: Express.Multer.File,
-  ) {
-    // Upload cover image if provided
+  async create(data: CreateProgramDto, coverImage?: Express.Multer.File) {
     let coverImageUrl: string | undefined;
     if (coverImage) {
       coverImageUrl = await this.storageService.uploadPublicFile(
@@ -28,75 +33,38 @@ export class ProgramsService {
       );
     }
 
-    // Extract coverImage from DTO to avoid inserting it as a field
     const { coverImage: _, ...programData } = data;
 
-    const [program] = await this.db
-      .insert(programs)
-      .values({
-        ...programData,
-        coverImageUrl,
-      })
-      .returning();
+    const program = await this.programsRepository.insert({
+      ...programData,
+      coverImageUrl,
+    });
 
-    try {
-      await this.searchService.indexProgram(program);
-    } catch (error) {
-      console.error(
-        `CRITICAL: DB created Program ${program.id}, but Indexing failed:`,
-        error,
-      );
-    }
+    this.eventEmitter.emit('program.created', new ProgramCreatedEvent(program));
 
     return program;
   }
 
   async findAll(page: number = 1, limit: number = 10) {
-    const offset = (page - 1) * limit;
+    const offset = toOffset(page, limit);
+    const [items, total] = await Promise.all([
+      this.programsRepository.findAll(offset, limit),
+      this.programsRepository.count(),
+    ]);
 
-    const items = await this.db
-      .select()
-      .from(programs)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(sql`${programs.createdAt} DESC`);
-
-    const [{ count }] = await this.db
-      .select({ count: sql<number>`count(*)` })
-      .from(programs);
-
-    return {
-      items,
-      total: Number(count),
-      page,
-      limit,
-      totalPages: Math.ceil(Number(count) / limit),
-    };
+    return buildPaginatedResult(items, total, page, limit);
   }
 
   async findOne(id: string) {
-    const [program] = await this.db
-      .select()
-      .from(programs)
-      .where(eq(programs.id, id))
-      .limit(1);
+    const program = await this.programsRepository.findById(id);
 
     if (!program) {
       throw new NotFoundException(`Program with ID ${id} not found`);
     }
 
-    const episodeResults = await this.db
-      .select()
-      .from(episodes)
-      .where(eq(episodes.programId, id))
-      .orderBy(
-        sql`${episodes.seasonNumber} ASC, ${episodes.episodeNumber} ASC`,
-      );
+    const episodes = await this.episodesRepository.findByProgramId(id);
 
-    return {
-      ...program,
-      episodes: episodeResults,
-    };
+    return { ...program, episodes };
   }
 
   async update(
@@ -104,7 +72,6 @@ export class ProgramsService {
     data: UpdateProgramDto,
     coverImage?: Express.Multer.File,
   ) {
-    // Upload cover image if provided
     let coverImageUrl: string | undefined;
     if (coverImage) {
       coverImageUrl = await this.storageService.uploadPublicFile(
@@ -113,53 +80,34 @@ export class ProgramsService {
       );
     }
 
-    // Extract coverImage from DTO to avoid inserting it as a field
     const { coverImage: _, ...programData } = data;
 
-    const [program] = await this.db
-      .update(programs)
-      .set({
-        ...programData,
-        ...(coverImageUrl && { coverImageUrl }),
-        updatedAt: new Date(),
-      })
-      .where(eq(programs.id, id))
-      .returning();
+    const program = await this.programsRepository.update(id, {
+      ...programData,
+      ...(coverImageUrl && { coverImageUrl }),
+      updatedAt: new Date(),
+    });
 
     if (!program) {
       throw new NotFoundException(`Program with ID ${id} not found`);
     }
 
-    try {
-      await this.searchService.updateProgram(program);
-    } catch (error) {
-      console.error(
-        `CRITICAL: DB updated Program ${program.id}, but Indexing failed:`,
-        error,
-      );
-    }
+    this.eventEmitter.emit('program.updated', new ProgramUpdatedEvent(program));
 
     return program;
   }
 
   async remove(id: string) {
-    const [program] = await this.db
-      .delete(programs)
-      .where(eq(programs.id, id))
-      .returning();
+    const program = await this.programsRepository.delete(id);
 
     if (!program) {
       throw new NotFoundException(`Program with ID ${id} not found`);
     }
 
-    try {
-      await this.searchService.deleteProgram(program.id);
-    } catch (error) {
-      console.error(
-        `CRITICAL: DB deleted Program ${program.id}, but Indexing failed:`,
-        error,
-      );
-    }
+    this.eventEmitter.emit(
+      'program.deleted',
+      new ProgramDeletedEvent(program.id),
+    );
 
     return { message: 'Program deleted successfully', id };
   }

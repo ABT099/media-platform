@@ -15,19 +15,35 @@ export class UploadController {
 
   @Post('sign-video')
   @ApiOperation({
-    summary: 'Generate presigned URL for video upload',
+    summary: 'Generate presigned URL for video upload (fallback / replacement)',
     description:
-      'Generates a presigned S3 URL that allows direct upload of large video files to S3. The URL is valid for 1 hour. Can be used for both initial video uploads and video replacements. After uploading to S3, the system will automatically detect the upload and update the episode status to "published". To replace an existing video, call this endpoint again with the same episodeId to get a new presigned URL.',
+      `Generates a presigned S3 URL that allows direct upload of large video files to S3. The URL is valid for 1 hour.
+This endpoint serves as a fallback when the presigned URL returned by POST /programs/:programId/episodes has expired,
+or when you need to upload a replacement video for an existing episode with a custom fileName and contentType.
+After uploading to S3, the system will automatically detect the upload via SQS and update the episode accordingly:
+if no publicationDate is set the episode will be published immediately; if a future publicationDate exists, it will be scheduled.`
   })
   @ApiBody({
     type: SignUploadDto,
     description: 'Video upload request details',
     examples: {
-      example1: {
-        summary: 'Upload MP4 video',
+      'expired-url': {
+        summary: 'Re-request after expired presigned URL',
+        description:
+          'The presigned URL from episode creation expired (1 hour). Request a fresh one.',
         value: {
           episodeId: '223e4567-e89b-12d3-a456-426614174000',
           fileName: 'episode-1.mp4',
+          contentType: 'video/mp4',
+        },
+      },
+      'replace-video': {
+        summary: 'Replace existing video with a new file',
+        description:
+          'Upload a different video file to an episode that already has a video.',
+        value: {
+          episodeId: '223e4567-e89b-12d3-a456-426614174000',
+          fileName: 'episode-1-v2.mp4',
           contentType: 'video/mp4',
         },
       },

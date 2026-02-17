@@ -40,7 +40,7 @@ export class EpisodesController {
   @ApiOperation({
     summary: 'Create a new episode under a program',
     description:
-      'Creates a new episode for a specific program. Optionally upload a thumbnail image file. If a future publicationDate is provided, the episode will be scheduled for automatic publication. Otherwise, it will be created with status "draft" and can be published later when the video is uploaded.',
+      'Creates a new episode for a specific program. Optionally upload a thumbnail image file. If a future publicationDate is provided, the episode will be scheduled for automatic publication once the video is uploaded. Otherwise, it will be created with status "draft" and uploading a video will publish it immediately. The response always includes an "upload" object with a presigned S3 URL (valid for 1 hour) so the frontend can start uploading the video right away. If the presigned URL expires before the upload completes, use POST /upload/sign-video to request a new one.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: CreateEpisodeDto })
@@ -52,7 +52,8 @@ export class EpisodesController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Episode created successfully',
+    description:
+      'Episode created successfully. Includes a presigned S3 upload URL valid for 1 hour.',
     schema: {
       example: {
         id: '223e4567-e89b-12d3-a456-426614174000',
@@ -68,6 +69,14 @@ export class EpisodesController {
         publicationDate: '2024-02-17T14:30:00.000Z',
         createdAt: '2024-02-17T14:30:00.000Z',
         updatedAt: '2024-02-17T14:30:00.000Z',
+        upload: {
+          uploadUrl:
+            'https://s3.amazonaws.com/bucket/episodes/223e4567-e89b-12d3-a456-426614174000/original?X-Amz-Algorithm=...',
+          fileKey:
+            'episodes/223e4567-e89b-12d3-a456-426614174000/original',
+          publicUrl:
+            'https://cdn.example.com/episodes/223e4567-e89b-12d3-a456-426614174000/original',
+        },
       },
     },
   })

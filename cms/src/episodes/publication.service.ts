@@ -1,19 +1,21 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Inject } from '@nestjs/common';
-import { DB, type DrizzleDB } from 'src/database/database.provider';
-import { episodes, type Episode } from 'src/database/schema';
-import { eq, and, lte } from 'drizzle-orm';
-import { SearchService } from 'src/search/search.service';
+import { type Episode } from 'src/database/schema';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EpisodeStatusChangedEvent } from 'src/common/events/episode.events';
+import { EpisodesRepository } from './episodes.repository';
 
 @Injectable()
 export class PublicationService {
+  private readonly logger = new Logger(PublicationService.name);
+
   constructor(
-    @Inject(DB) private readonly db: DrizzleDB,
-    private readonly searchService: SearchService,
+    private readonly episodesRepository: EpisodesRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   determineStatus(
@@ -46,11 +48,7 @@ export class PublicationService {
     episodeId: string,
     publicationDate: Date,
   ): Promise<Episode> {
-    const [episode] = await this.db
-      .select()
-      .from(episodes)
-      .where(eq(episodes.id, episodeId))
-      .limit(1);
+    const episode = await this.episodesRepository.findById(episodeId);
 
     if (!episode) {
       throw new NotFoundException(`Episode with ID ${episodeId} not found`);
@@ -64,25 +62,17 @@ export class PublicationService {
 
     const status = this.determineStatus(publicationDate, true);
 
-    const [updatedEpisode] = await this.db
-      .update(episodes)
-      .set({
-        status,
-        publicationDate,
-        updatedAt: new Date(),
-      })
-      .where(eq(episodes.id, episodeId))
-      .returning();
+    const updatedEpisode = await this.episodesRepository.update(episodeId, {
+      status,
+      publicationDate,
+      updatedAt: new Date(),
+    });
 
     return updatedEpisode!;
   }
 
   async publishNow(episodeId: string): Promise<Episode> {
-    const [episode] = await this.db
-      .select()
-      .from(episodes)
-      .where(eq(episodes.id, episodeId))
-      .limit(1);
+    const episode = await this.episodesRepository.findById(episodeId);
 
     if (!episode) {
       throw new NotFoundException(`Episode with ID ${episodeId} not found`);
@@ -94,34 +84,22 @@ export class PublicationService {
       );
     }
 
-    const [updatedEpisode] = await this.db
-      .update(episodes)
-      .set({
-        status: 'published',
-        publicationDate: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(episodes.id, episodeId))
-      .returning();
+    const updatedEpisode = await this.episodesRepository.update(episodeId, {
+      status: 'published',
+      publicationDate: new Date(),
+      updatedAt: new Date(),
+    });
 
-    try {
-      await this.searchService.indexEpisode(updatedEpisode!);
-    } catch (error) {
-      console.error(
-        `CRITICAL: Episode ${episodeId} published, but indexing failed:`,
-        error,
-      );
-    }
+    this.eventEmitter.emit(
+      'episode.status_changed',
+      new EpisodeStatusChangedEvent(updatedEpisode!),
+    );
 
     return updatedEpisode!;
   }
 
   async cancelSchedule(episodeId: string): Promise<Episode> {
-    const [episode] = await this.db
-      .select()
-      .from(episodes)
-      .where(eq(episodes.id, episodeId))
-      .limit(1);
+    const episode = await this.episodesRepository.findById(episodeId);
 
     if (!episode) {
       throw new NotFoundException(`Episode with ID ${episodeId} not found`);
@@ -133,66 +111,50 @@ export class PublicationService {
       );
     }
 
-    const [updatedEpisode] = await this.db
-      .update(episodes)
-      .set({
-        status: 'draft',
-        publicationDate: null,
-        updatedAt: new Date(),
-      })
-      .where(eq(episodes.id, episodeId))
-      .returning();
+    const updatedEpisode = await this.episodesRepository.update(episodeId, {
+      status: 'draft',
+      publicationDate: null,
+      updatedAt: new Date(),
+    });
 
     return updatedEpisode!;
   }
 
-  /**
-   * Processes scheduled episodes that are ready to be published
-   */
   async processScheduledPublications(): Promise<number> {
     const now = new Date();
+    const scheduledEpisodes =
+      await this.episodesRepository.findScheduledReadyToPublish(now);
 
-    const scheduledEpisodes = await this.db
-      .select()
-      .from(episodes)
-      .where(
-        and(
-          eq(episodes.status, 'scheduled'),
-          lte(episodes.publicationDate, now),
-        ),
-      );
+    if (scheduledEpisodes.length === 0) return 0;
 
-    let publishedCount = 0;
-
+    // Separate publishable from non-publishable episodes
+    const publishableIds: string[] = [];
     for (const episode of scheduledEpisodes) {
-      if (!this.canPublish(episode)) {
-        console.warn(
+      if (this.canPublish(episode)) {
+        publishableIds.push(episode.id);
+      } else {
+        this.logger.warn(
           `Episode ${episode.id} is scheduled but has no video. Skipping.`,
-        );
-        continue;
-      }
-
-      try {
-        const [updatedEpisode] = await this.db
-          .update(episodes)
-          .set({
-            status: 'published',
-            updatedAt: new Date(),
-          })
-          .where(eq(episodes.id, episode.id))
-          .returning();
-
-        await this.searchService.indexEpisode(updatedEpisode!);
-        publishedCount++;
-        console.log(`Published scheduled episode ${episode.id}`);
-      } catch (error) {
-        console.error(
-          `Failed to publish scheduled episode ${episode.id}:`,
-          error,
         );
       }
     }
 
-    return publishedCount;
+    if (publishableIds.length === 0) return 0;
+
+    // Batch update all eligible episodes in a single query
+    const updatedEpisodes = await this.episodesRepository.publishMany(
+      publishableIds,
+      now,
+    );
+
+    // Emit status_changed events for all published episodes (fire-and-forget)
+    for (const episode of updatedEpisodes) {
+      this.eventEmitter.emit(
+        'episode.status_changed',
+        new EpisodeStatusChangedEvent(episode),
+      );
+    }
+
+    return updatedEpisodes.length;
   }
 }
