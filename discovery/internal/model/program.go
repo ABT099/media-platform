@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type ProgramType string
 
@@ -19,6 +22,7 @@ type ProgramDetail struct {
 	Category   string           `json:"category"`
 	Language   string           `json:"language"`
 	CoverImage *string          `json:"coverImageUrl,omitempty"`
+	ExtraInfo  json.RawMessage  `json:"extraInfo,omitempty"`
 	Episodes   []EpisodeSummary `json:"episodes"`
 }
 

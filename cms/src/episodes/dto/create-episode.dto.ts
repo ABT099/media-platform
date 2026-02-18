@@ -5,6 +5,7 @@ import {
   IsInt,
   Min,
   IsDate,
+  IsObject,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -81,4 +82,12 @@ export class CreateEpisodeDto {
   @Min(1)
   @IsOptional()
   seasonNumber?: number;
+
+  @ApiPropertyOptional({
+    description: 'Extra info - flexible key-value metadata (JSON object)',
+    example: { director: 'Name', location: 'Riyadh' },
+  })
+  @IsObject()
+  @IsOptional()
+  extraInfo?: Record<string, unknown>;
 }

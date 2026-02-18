@@ -20,32 +20,34 @@ type Searcher interface {
 
 // RawProgram is the store output shape for a program document (ES/DB raw).
 type RawProgram struct {
-	ID            string    `json:"id"`
-	Title         string    `json:"title"`
-	Description   *string   `json:"description"`
-	Type          string    `json:"type"`
-	Category      string    `json:"category"`
-	Language      string    `json:"language"`
-	CoverImageURL *string   `json:"coverImageUrl"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID            string          `json:"id"`
+	Title         string          `json:"title"`
+	Description   *string         `json:"description"`
+	Type          string          `json:"type"`
+	Category      string          `json:"category"`
+	Language      string          `json:"language"`
+	CoverImageURL *string         `json:"coverImageUrl"`
+	ExtraInfo     json.RawMessage `json:"extraInfo,omitempty"`
+	CreatedAt     time.Time       `json:"createdAt"`
+	UpdatedAt     time.Time       `json:"updatedAt"`
 }
 
 // RawEpisode is the store output shape for an episode document (ES/DB raw).
 type RawEpisode struct {
-	ID                string     `json:"id"`
-	ProgramID         string     `json:"programId"`
-	Title             string     `json:"title"`
-	Description       *string    `json:"description"`
-	DurationInSeconds int        `json:"durationInSeconds"`
-	PublicationDate   *time.Time `json:"publicationDate"`
-	VideoURL          *string    `json:"videoUrl"`
-	ThumbnailURL      *string   `json:"thumbnailUrl"`
-	Status            string    `json:"status"`
-	EpisodeNumber     int       `json:"episodeNumber"`
-	SeasonNumber      *int      `json:"seasonNumber"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
+	ID                string          `json:"id"`
+	ProgramID         string          `json:"programId"`
+	Title             string          `json:"title"`
+	Description       *string         `json:"description"`
+	DurationInSeconds int             `json:"durationInSeconds"`
+	PublicationDate   *time.Time      `json:"publicationDate"`
+	VideoURL          *string         `json:"videoUrl"`
+	ThumbnailURL      *string         `json:"thumbnailUrl"`
+	Status            string          `json:"status"`
+	EpisodeNumber     int             `json:"episodeNumber"`
+	SeasonNumber      *int            `json:"seasonNumber"`
+	ExtraInfo         json.RawMessage `json:"extraInfo,omitempty"`
+	CreatedAt         time.Time       `json:"createdAt"`
+	UpdatedAt         time.Time       `json:"updatedAt"`
 }
 
 // Hit is a single search hit (index name + raw source for multi-index search).

@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  jsonb,
   text,
   timestamp,
   uniqueIndex,
@@ -28,6 +29,7 @@ export const programs = pgTable(
     category: text().notNull(),
     language: languageEnum().notNull(),
     coverImageUrl: text(),
+    extraInfo: jsonb(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow(),
   },
@@ -52,6 +54,7 @@ export const episodes = pgTable(
     thumbnailUrl: text(),
     episodeNumber: integer().notNull(),
     seasonNumber: integer(),
+    extraInfo: jsonb(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow(),
     status: statusEnum().notNull().default('draft'),

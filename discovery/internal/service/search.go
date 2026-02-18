@@ -136,6 +136,7 @@ func (s *SearchService) GetProgram(ctx context.Context, id string, episodePage, 
 		Category:   rawProgram.Category,
 		Language:   rawProgram.Language,
 		CoverImage: rawProgram.CoverImageURL,
+		ExtraInfo:  rawProgram.ExtraInfo,
 		Episodes:   make([]model.EpisodeSummary, 0, len(episodes)),
 	}
 	for _, e := range episodes {
@@ -182,6 +183,7 @@ func (s *SearchService) GetEpisode(ctx context.Context, id string) (*model.Episo
 		EpisodeNumber:   &rawEpisode.EpisodeNumber,
 		SeasonNumber:    rawEpisode.SeasonNumber,
 		PublicationDate: rawEpisode.PublicationDate,
+		ExtraInfo:       rawEpisode.ExtraInfo,
 		Program:         model.ProgramSummary{},
 	}
 	if rawProgram != nil {

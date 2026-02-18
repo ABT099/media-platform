@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProgramType, Language } from 'src/common/enums/program.enums';
 
@@ -59,6 +59,14 @@ export class CreateProgramDto {
   @IsEnum(Language)
   @IsNotEmpty()
   language: Language;
+
+  @ApiPropertyOptional({
+    description: 'Extra info - flexible key-value metadata (JSON object)',
+    example: { producer: 'Studio X', year: 2024 },
+  })
+  @IsObject()
+  @IsOptional()
+  extraInfo?: Record<string, unknown>;
 
   @ApiPropertyOptional({
     type: 'string',
