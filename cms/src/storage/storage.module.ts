@@ -1,11 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { S3Client } from '@aws-sdk/client-s3';
-import multerS3 from 'multer-s3';
-import { v4 as uuid } from 'uuid';
+import { memoryStorage } from 'multer';
 import { StorageService } from './storage.service';
-import { Request } from 'express';
 import { SqsModule } from '@ssut/nestjs-sqs';
 import { S3UploadConsumer } from './s3-upload.consumer';
 import { UploadController } from './upload.controller';
@@ -16,37 +13,16 @@ import { UploadController } from './upload.controller';
     MulterModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const region = configService.getOrThrow<string>('AWS_REGION');
-        const bucket = configService.getOrThrow<string>('S3_BUCKET');
-
-        return {
-          storage: multerS3({
-            s3: new S3Client({region}),
-            bucket,
-            contentType: (req, file, cb) => {
-              multerS3.AUTO_CONTENT_TYPE(req, file, cb);
-            },
-            key: (
-              req: Request,
-              file: Express.Multer.File,
-              cb: (error: any, key?: string) => void,
-            ) => {
-              // Organize images in a separate folder
-              const fileName = `episodes/covers/${uuid()}-${file.originalname}`;
-              cb(null, fileName);
-            },
-          }),
-          limits: { fileSize: 5 * 1024 * 1024 }, // 5MB Limit
-        };
-      },
+      useFactory: () => ({
+        storage: memoryStorage(),
+        limits: { fileSize: 5 * 1024 * 1024 },
+      }),
     }),
     SqsModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const region = configService.getOrThrow<string>('AWS_REGION');
         const queueUrl = configService.getOrThrow<string>('SQS_QUEUE_URL');
-
         return {
           consumers: [
             {
@@ -64,4 +40,4 @@ import { UploadController } from './upload.controller';
   exports: [StorageService, MulterModule],
   controllers: [UploadController],
 })
-export class StorageModule {}
+export class StorageModule { }
