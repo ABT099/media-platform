@@ -52,6 +52,11 @@ func main() {
 		AllowAllOrigins: true,
 		AllowHeaders:    []string{"Origin", "Content-Type", "Accept", "Authorization"},
 	}))
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status": "ok",
+		})
+	})
 	router.GET("/search", searchHandler.Search)
 	router.GET("/programs/:id", searchHandler.GetProgram)
 	router.GET("/episodes/:id", searchHandler.GetEpisode)
