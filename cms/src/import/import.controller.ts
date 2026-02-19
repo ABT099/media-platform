@@ -1,9 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ImportService } from './import.service';
 import { ImportFromUrlDto } from './dto/import-from-url.dto';
 
 @ApiTags('import')
+@ApiBearerAuth()
 @Controller('import')
 export class ImportController {
   constructor(private readonly importService: ImportService) {}

@@ -44,6 +44,8 @@ The CMS is an internal API for managing all media content. It handles the full c
 | `AWS_SQS_QUEUE_URL` | SQS queue URL for the upload processing worker |
 | `AWS_CLOUDFRONT_DOMAIN` | CloudFront domain used to build public video URLs |
 | `YOUTUBE_API_KEY` | YouTube Data API v3 key (required for playlist import) |
+| `JWT_SECRET` | Secret used to sign access JWTs (required for CMS auth; access tokens expire in 15m) |
+| `JWT_REFRESH_SECRET` | Secret used to sign refresh tokens (refresh tokens expire in 7d) |
 
 ---
 
@@ -176,6 +178,9 @@ cp .env.example .env   # then fill in YOUTUBE_API_KEY if needed
 
 # Run database migrations
 npx drizzle-kit migrate
+
+# Seed the demo account (demo@example.com / demo)
+npm run seed
 
 # Start in development (watch) mode
 npm run start:dev

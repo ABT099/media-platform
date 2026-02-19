@@ -17,16 +17,21 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Media Platform CMS API')
     .setDescription(
-      'Content Management System API for managing visual programs (podcasts, documentaries, series) and episodes',
+      'Content Management System API for managing visual programs (podcasts, documentaries, series) and episodes. ' +
+        'Use the demo account (demo@example.com / demo) to log in via POST /auth/login, then click Authorize and paste the returned accessToken.',
     )
     .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth', 'Login and token refresh')
     .addTag('programs', 'Program management endpoints - Create, read, update, and delete programs')
     .addTag('episodes', 'Episode management endpoints - Manage episodes within programs')
     .addTag('upload', 'File upload endpoints - Generate presigned URLs for direct S3 uploads')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

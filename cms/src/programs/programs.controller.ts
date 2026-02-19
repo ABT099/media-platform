@@ -21,6 +21,7 @@ import {
   ApiParam,
   ApiConsumes,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProgramsService } from './programs.service';
@@ -28,6 +29,7 @@ import { CreateProgramDto } from './dto/create-program.dto';
 import { UpdateProgramDto } from './dto/update-program.dto';
 
 @ApiTags('programs')
+@ApiBearerAuth()
 @Controller('programs')
 export class ProgramsController {
   constructor(private readonly programsService: ProgramsService) {}

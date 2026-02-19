@@ -21,6 +21,7 @@ import {
   ApiParam,
   ApiConsumes,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EpisodesService } from './episodes.service';
@@ -29,6 +30,7 @@ import { CreateEpisodeDto } from './dto/create-episode.dto';
 import { UpdateEpisodeDto } from './dto/update-episode.dto';
 
 @ApiTags('episodes')
+@ApiBearerAuth()
 @Controller()
 export class EpisodesController {
   constructor(

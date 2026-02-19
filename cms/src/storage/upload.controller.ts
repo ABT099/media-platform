@@ -4,11 +4,13 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { StorageService } from './storage.service';
 import { SignUploadDto } from './dto/create-signed-file.dto';
 
 @ApiTags('upload')
+@ApiBearerAuth()
 @Controller('upload')
 export class UploadController {
   constructor(private readonly storageService: StorageService) {}

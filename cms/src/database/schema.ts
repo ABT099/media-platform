@@ -19,6 +19,15 @@ export const languageEnum = pgEnum('language_code', ['ar', 'en']);
 
 export const statusEnum = pgEnum('status', ['draft', 'scheduled', 'published']);
 
+export const users = pgTable('users', {
+  id: uuid().defaultRandom().primaryKey(),
+  email: text().notNull().unique(),
+  passwordHash: text().notNull(),
+  name: text(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow(),
+});
+
 export const programs = pgTable(
   'programs',
   {
@@ -75,5 +84,6 @@ export const episodes = pgTable(
   ],
 );
 
+export type User = typeof users.$inferSelect;
 export type Program = typeof programs.$inferSelect;
 export type Episode = typeof episodes.$inferSelect;
