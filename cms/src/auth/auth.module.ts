@@ -19,7 +19,7 @@ import { JwtStrategy } from './jwt.strategy';
         const secret = configService.getOrThrow<string>('JWT_SECRET');
         return {
           secret,
-          signOptions: { expiresIn: '15m' },
+          signOptions: { expiresIn: '1d' },
         } as JwtModuleOptions;
       },
     }),
@@ -28,4 +28,4 @@ import { JwtStrategy } from './jwt.strategy';
   providers: [UsersRepository, AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

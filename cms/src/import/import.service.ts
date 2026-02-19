@@ -10,6 +10,7 @@ import {
 import { EpisodeStatusChangedEvent } from 'src/common/events/episode.events';
 import { ProgramsRepository } from 'src/programs/programs.repository';
 import { EpisodesRepository } from 'src/episodes/episodes.repository';
+import { PublicationService } from 'src/episodes/publication.service';
 
 @Injectable()
 export class ImportService {
@@ -21,6 +22,7 @@ export class ImportService {
     @Inject(DB) private readonly db: DrizzleDB,
     private readonly programsRepository: ProgramsRepository,
     private readonly episodesRepository: EpisodesRepository,
+    private readonly publicationService: PublicationService,
     private readonly eventEmitter: EventEmitter2,
   ) {
     this.providers = [youtubeProvider];
@@ -44,12 +46,20 @@ export class ImportService {
       );
 
       const episodeInserts = episodeDtos.map(
-        ({ thumbnail: _t, ...ep }) => ({
-          ...ep,
-          programId: insertedProgram.id,
-          videoUrl: null as string | null,
-          status: 'draft' as const,
-        }),
+        ({ thumbnail: _t, videoUrl, thumbnailUrl, ...ep }) => {
+          const hasVideo = !!videoUrl;
+          const status = this.publicationService.determineStatus(
+            ep.publicationDate ?? null,
+            hasVideo,
+          );
+          return {
+            ...ep,
+            programId: insertedProgram.id,
+            videoUrl: videoUrl ?? null,
+            thumbnailUrl: thumbnailUrl ?? null,
+            status,
+          };
+        },
       );
 
       const insertedEpisodes =
@@ -78,3 +88,4 @@ export class ImportService {
     };
   }
 }
+

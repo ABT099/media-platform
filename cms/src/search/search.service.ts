@@ -15,6 +15,10 @@ export class SearchService implements OnModuleInit {
       node:
         this.configService.get<string>('OS_ENDPOINT') ||
         'http://localhost:9200',
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      }
     });
   }
 

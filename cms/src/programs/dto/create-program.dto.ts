@@ -67,9 +67,10 @@ export class CreateProgramDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') return undefined;
     return typeof value === 'string' ? JSON.parse(value) : value;
   })
-  @IsObject()
+  @IsObject({ message: 'extraInfo must be an object' })
   extraInfo?: Record<string, unknown>;
 
   @ApiPropertyOptional({

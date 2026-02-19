@@ -7,9 +7,9 @@ import { ConfigService } from '@nestjs/config';
 import {
   ContentProvider,
   ImportResult,
+  ImportEpisodeData,
 } from '../interfaces/content-provider.interface';
 import { CreateProgramDto } from 'src/programs/dto/create-program.dto';
-import { CreateEpisodeDto } from 'src/episodes/dto/create-episode.dto';
 import { ProgramType, Language } from 'src/common/enums/program.enums';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
@@ -46,18 +46,47 @@ type YoutubeVideoContentDetails = {
   duration?: string;
 }
 
+type YoutubeVideoSnippet = {
+  title?: string;
+  description?: string;
+  publishedAt?: string;
+  channelTitle?: string;
+  thumbnails?: Record<string, { url: string }>;
+  tags?: string[];
+}
+
 /** Video resource from videos.list with part=snippet,contentDetails */
 type YoutubeVideoResource = {
   id?: string;
-  snippet?: { title?: string; description?: string };
+  snippet?: YoutubeVideoSnippet;
   contentDetails?: YoutubeVideoContentDetails;
+};
+
+/** Resolved video info from the batch fetch */
+type ResolvedVideoInfo = {
+  durationSeconds: number;
+  thumbnailUrl?: string;
+  publishedAt?: string;
+  channelTitle?: string;
+  tags?: string[];
 };
 
 @Injectable()
 export class YoutubeProvider implements ContentProvider {
   private readonly logger = new Logger(YoutubeProvider.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
+
+  /** Pick the best available thumbnail URL from a YouTube thumbnails object */
+  private pickBestThumbnail(
+    thumbnails?: Record<string, { url: string }>,
+  ): string | undefined {
+    if (!thumbnails) return undefined;
+    for (const key of ['maxres', 'high', 'medium', 'default']) {
+      if (thumbnails[key]?.url) return thumbnails[key].url;
+    }
+    return undefined;
+  }
 
   canHandle(url: string): boolean {
     try {
@@ -120,7 +149,7 @@ export class YoutubeProvider implements ContentProvider {
       .map((i) => i.snippet?.resourceId?.videoId ?? i.contentDetails?.videoId)
       .filter((id): id is string => !!id))];
 
-    const durations = await this.fetchVideoDurations(videoIds, apiKey);
+    const videoInfoMap = await this.fetchVideoInfo(videoIds, apiKey);
 
     const program: CreateProgramDto = {
       title: playlistMeta.snippet?.title ?? 'Imported from YouTube',
@@ -128,9 +157,14 @@ export class YoutubeProvider implements ContentProvider {
       type: ProgramType.SERIES,
       category: 'Entertainment',
       language: Language.ARABIC,
+      extraInfo: {
+        source: 'youtube',
+        playlistId: this.parsePlaylistId(url),
+        playlistThumbnail: this.pickBestThumbnail(playlistMeta.snippet?.thumbnails),
+      },
     };
 
-    const episodes: CreateEpisodeDto[] = [];
+    const episodes: ImportEpisodeData[] = [];
     let episodeNumber = 1;
     for (const item of items) {
       const videoId =
@@ -144,14 +178,25 @@ export class YoutubeProvider implements ContentProvider {
       ) {
         continue;
       }
-      const durationSeconds = durations.get(videoId) ?? 0;
+      const info = videoInfoMap.get(videoId);
+      const durationSeconds = info?.durationSeconds ?? 0;
+      const thumbnailUrl = info?.thumbnailUrl;
+      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
       episodes.push({
         title,
         description: item.snippet?.description ?? undefined,
         durationInSeconds: durationSeconds,
         episodeNumber,
         seasonNumber: 1,
-        publicationDate: undefined,
+        videoUrl,
+        thumbnailUrl,
+        extraInfo: {
+          source: 'youtube',
+          videoId,
+          channelTitle: info?.channelTitle,
+          tags: info?.tags,
+        },
       });
       episodeNumber += 1;
     }
@@ -169,6 +214,8 @@ export class YoutubeProvider implements ContentProvider {
     const durationSeconds = video.contentDetails?.duration
       ? this.parseIsoDuration(video.contentDetails.duration)
       : 0;
+    const thumbnailUrl = this.pickBestThumbnail(video.snippet?.thumbnails);
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     const program: CreateProgramDto = {
       title,
@@ -176,16 +223,28 @@ export class YoutubeProvider implements ContentProvider {
       type: ProgramType.SERIES,
       category: 'Entertainment',
       language: Language.ARABIC,
+      extraInfo: {
+        source: 'youtube',
+        videoId,
+        channelTitle: video.snippet?.channelTitle,
+      },
     };
 
-    const episodes: CreateEpisodeDto[] = [
+    const episodes: ImportEpisodeData[] = [
       {
         title,
         description,
         durationInSeconds: durationSeconds,
         episodeNumber: 1,
         seasonNumber: 1,
-        publicationDate: undefined,
+        videoUrl,
+        thumbnailUrl,
+        extraInfo: {
+          source: 'youtube',
+          videoId,
+          channelTitle: video.snippet?.channelTitle,
+          tags: video.snippet?.tags,
+        },
       },
     ];
 
@@ -335,17 +394,20 @@ export class YoutubeProvider implements ContentProvider {
     return video;
   }
 
-  private async fetchVideoDurations(
+  /**
+   * Batch-fetches video info (duration, thumbnails, channel, tags) for a list of video IDs.
+   */
+  private async fetchVideoInfo(
     videoIds: string[],
     apiKey: string,
-  ): Promise<Map<string, number>> {
-    const map = new Map<string, number>();
+  ): Promise<Map<string, ResolvedVideoInfo>> {
+    const map = new Map<string, ResolvedVideoInfo>();
     if (videoIds.length === 0) return map;
 
     for (let i = 0; i < videoIds.length; i += VIDEOS_BATCH_SIZE) {
       const batch = videoIds.slice(i, i + VIDEOS_BATCH_SIZE);
       const params = new URLSearchParams({
-        part: 'contentDetails',
+        part: 'snippet,contentDetails',
         id: batch.join(','),
         key: apiKey,
       });
@@ -354,14 +416,11 @@ export class YoutubeProvider implements ContentProvider {
         const body = await res.text();
         this.logger.error(`YouTube videos.list failed: ${res.status} ${body}`);
         throw new BadRequestException(
-          `YouTube API error: ${res.status}. Could not fetch video durations.`,
+          `YouTube API error: ${res.status}. Could not fetch video info.`,
         );
       }
       const data = (await res.json()) as {
-        items?: Array<{
-          id?: string;
-          contentDetails?: YoutubeVideoContentDetails;
-        }>;
+        items?: YoutubeVideoResource[];
         error?: { message?: string };
       };
       if (data.error) {
@@ -372,10 +431,15 @@ export class YoutubeProvider implements ContentProvider {
       }
       for (const item of data.items ?? []) {
         const id = item.id;
+        if (!id) continue;
         const duration = item.contentDetails?.duration;
-        if (id && duration !== undefined) {
-          map.set(id, this.parseIsoDuration(duration));
-        }
+        map.set(id, {
+          durationSeconds: duration ? this.parseIsoDuration(duration) : 0,
+          thumbnailUrl: this.pickBestThumbnail(item.snippet?.thumbnails),
+          publishedAt: item.snippet?.publishedAt,
+          channelTitle: item.snippet?.channelTitle,
+          tags: item.snippet?.tags,
+        });
       }
     }
     return map;
