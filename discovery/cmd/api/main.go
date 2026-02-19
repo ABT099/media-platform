@@ -23,6 +23,7 @@ import (
 	"discovery/internal/service"
 	"discovery/internal/store"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -47,7 +48,10 @@ func main() {
 	searchHandler := handler.NewSearchHandler(svc)
 
 	router := gin.Default()
-	
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowHeaders:    []string{"Origin", "Content-Type", "Accept", "Authorization"},
+	}))
 	router.GET("/search", searchHandler.Search)
 	router.GET("/programs/:id", searchHandler.GetProgram)
 	router.GET("/episodes/:id", searchHandler.GetEpisode)

@@ -4,6 +4,7 @@ go 1.25.6
 
 require (
 	github.com/elastic/go-elasticsearch/v9 v9.3.1
+	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.11.0
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/swaggo/files v1.0.1
