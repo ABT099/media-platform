@@ -401,7 +401,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/",
+	BasePath:         "/discovery",
 	Schemes:          []string{},
 	Title:            "Discovery API",
 	Description:      "User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes. Program and episode detail endpoints return full content with optional episode pagination. Responses are cached with a short TTL for scale.",

@@ -1,4 +1,4 @@
-basePath: /
+basePath: /discovery
 definitions:
   model.EpisodeDetail:
     properties:
