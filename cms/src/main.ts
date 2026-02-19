@@ -14,6 +14,8 @@ async function bootstrap() {
     }),
   );
 
+  app.setGlobalPrefix('cms');
+
   // Setup Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Media Platform CMS API')

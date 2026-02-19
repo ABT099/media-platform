@@ -51,15 +51,17 @@ func main() {
 		AllowAllOrigins: true,
 		AllowHeaders:    []string{"Origin", "Content-Type", "Accept", "Authorization"},
 	}))
-	router.GET("/health", func(c *gin.Context) {
+	
+	v1 := router.Group("/discovery")
+	v1.GET("/search", searchHandler.Search)
+	v1.GET("/programs/:id", searchHandler.GetProgram)
+	v1.GET("/episodes/:id", searchHandler.GetEpisode)
+	v1.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
 		})
 	})
-	router.GET("/search", searchHandler.Search)
-	router.GET("/programs/:id", searchHandler.GetProgram)
-	router.GET("/episodes/:id", searchHandler.GetEpisode)
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if err := router.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatal(err)
