@@ -3,7 +3,6 @@
 //	@title			Discovery API
 //	@version		1.0
 //	@description	User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes. Program and episode detail endpoints return full content with optional episode pagination. Responses are cached with a short TTL for scale.
-//	@host			localhost:8080
 //	@BasePath		/
 //	@tag.name		search
 //	@tag.description	Search endpoints - Unified search across programs and episodes with filters and pagination

@@ -16,6 +16,6 @@ type EpisodeDetail struct {
 	EpisodeNumber   *int            `json:"episodeNumber,omitempty"`
 	SeasonNumber    *int            `json:"seasonNumber,omitempty"`
 	PublicationDate *time.Time      `json:"publicationDate,omitempty"`
-	ExtraInfo       json.RawMessage `json:"extraInfo,omitempty"`
+	ExtraInfo       json.RawMessage `json:"extraInfo,omitempty" swaggertype:"object"`
 	Program         ProgramSummary  `json:"program"`
 }

@@ -22,6 +22,7 @@ async function bootstrap() {
         'Use the demo account (demo@example.com / demo) to log in via POST /auth/login, then click Authorize and paste the returned accessToken.',
     )
     .setVersion('1.0')
+    .addServer('/')
     .addBearerAuth()
     .addTag('auth', 'Login and token refresh')
     .addTag('programs', 'Program management endpoints - Create, read, update, and delete programs')
