@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -122,7 +123,7 @@ func (s *SearchService) GetProgram(ctx context.Context, id string, episodePage, 
 		return nil
 	})
 	if err := g.Wait(); err != nil {
-		if err == port.ErrNotFound {
+		if errors.Is(err, port.ErrNotFound) {
 			return nil, port.ErrNotFound
 		}
 		return nil, err
@@ -165,7 +166,7 @@ func (s *SearchService) GetEpisode(ctx context.Context, id string) (*model.Episo
 
 	rawEpisode, err := s.store.GetEpisode(ctx, id)
 	if err != nil {
-		if err == port.ErrNotFound {
+		if errors.Is(err, port.ErrNotFound) {
 			return nil, port.ErrNotFound
 		}
 		return nil, err

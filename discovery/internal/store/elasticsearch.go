@@ -69,6 +69,9 @@ func (s *ESStore) SearchMultiIndex(ctx context.Context, query, category, languag
 	}
 	defer res.Body.Close()
 	if res.IsError() {
+		if res.StatusCode == 404 {
+			return []port.Hit{}, 0, nil
+		}
 		return nil, 0, fmt.Errorf("elasticsearch error: %s", res.Status())
 	}
 	var searchResp struct {
@@ -163,6 +166,10 @@ func (s *ESStore) GetEpisodesByProgramID(ctx context.Context, programID string, 
 	}
 	defer res.Body.Close()
 	if res.IsError() {
+		if res.StatusCode == 404 {
+			// Index doesn't exist - return empty results instead of error
+			return []port.RawEpisode{}, nil
+		}
 		return nil, fmt.Errorf("elasticsearch error: %s", res.Status())
 	}
 	var epResp struct {

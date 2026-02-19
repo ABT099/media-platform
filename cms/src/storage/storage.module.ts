@@ -18,22 +18,11 @@ import { UploadController } from './upload.controller';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const region = configService.getOrThrow<string>('AWS_REGION');
-        const accessKeyId =
-          configService.getOrThrow<string>('AWS_ACCESS_KEY_ID');
-        const secretAccessKey = configService.getOrThrow<string>(
-          'AWS_SECRET_ACCESS_KEY',
-        );
         const bucket = configService.getOrThrow<string>('S3_BUCKET');
 
         return {
           storage: multerS3({
-            s3: new S3Client({
-              region,
-              credentials: {
-                accessKeyId,
-                secretAccessKey,
-              },
-            }),
+            s3: new S3Client({region}),
             bucket,
             contentType: (req, file, cb) => {
               multerS3.AUTO_CONTENT_TYPE(req, file, cb);
