@@ -7,3 +7,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# Compiled binaries
+discovery/api
+*.exe
+*.bin
