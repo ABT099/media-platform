@@ -8,7 +8,7 @@ import {
   IsObject,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsFutureDate } from '../validators/is-future-date.validator';
 
 export class CreateEpisodeDto {
@@ -87,7 +87,10 @@ export class CreateEpisodeDto {
     description: 'Extra info - flexible key-value metadata (JSON object)',
     example: { director: 'Name', location: 'Riyadh' },
   })
-  @IsObject()
   @IsOptional()
+  @Transform(({ value }) => {
+    return typeof value === 'string' ? JSON.parse(value) : value;
+  })
+  @IsObject()
   extraInfo?: Record<string, unknown>;
 }

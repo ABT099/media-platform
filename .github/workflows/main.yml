@@ -65,7 +65,7 @@ jobs:
           task-definition: ${{ steps.task-def-cms.outputs.task-definition }}
           service: ${{ secrets.ECS_SERVICE_CMS }}
           cluster: ${{ secrets.ECS_CLUSTER }}
-          wait-for-service-stability: true
+          wait-for-service-stability: false
 
   discovery:
     name: Build and Deploy Discovery
@@ -122,4 +122,4 @@ jobs:
           task-definition: ${{ steps.task-def-discovery.outputs.task-definition }}
           service: ${{ secrets.ECS_SERVICE_DISCOVERY }}
           cluster: ${{ secrets.ECS_CLUSTER }}
-          wait-for-service-stability: true
+          wait-for-service-stability: false
