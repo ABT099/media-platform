@@ -11,14 +11,18 @@ export const databaseProvider: Provider = {
   provide: DB,
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
-    const connectionString = configService.get<string>('DATABASE_URL');
-
-    if (!connectionString) {
-      throw new Error('DATABASE_URL is not defined in environment variables');
-    }
+    const host = configService.getOrThrow<string>('DB_HOST');
+    const port = configService.getOrThrow<string>('DB_PORT');
+    const name = configService.getOrThrow<string>('DB_NAME');
+    const user = configService.getOrThrow<string>('DB_USER');
+    const password = configService.getOrThrow<string>('DB_PASSWORD');
 
     const pool = new Pool({
-      connectionString,
+      host,
+      port: Number(port),
+      database: name,
+      user,
+      password,
     });
 
     const db = drizzle({

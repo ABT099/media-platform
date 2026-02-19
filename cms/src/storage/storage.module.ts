@@ -23,7 +23,7 @@ import { UploadController } from './upload.controller';
         const secretAccessKey = configService.getOrThrow<string>(
           'AWS_SECRET_ACCESS_KEY',
         );
-        const bucket = configService.getOrThrow<string>('AWS_S3_BUCKET_NAME');
+        const bucket = configService.getOrThrow<string>('S3_BUCKET');
 
         return {
           storage: multerS3({
@@ -56,7 +56,7 @@ import { UploadController } from './upload.controller';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const region = configService.getOrThrow<string>('AWS_REGION');
-        const queueUrl = configService.getOrThrow<string>('AWS_SQS_QUEUE_URL');
+        const queueUrl = configService.getOrThrow<string>('SQS_QUEUE_URL');
 
         return {
           consumers: [

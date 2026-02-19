@@ -8,14 +8,20 @@ import * as schema from './schema';
 const DEMO_EMAIL = 'demo@example.com';
 const DEMO_PASSWORD = 'demo';
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD } = process.env;
 
 async function seed() {
-  if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL is required');
+  if (!DB_HOST || !DB_NAME || !DB_USER || !DB_PASSWORD) {
+    throw new Error('DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD are required');
   }
 
-  const pool = new Pool({ connectionString: DATABASE_URL });
+  const pool = new Pool({
+    host: DB_HOST,
+    port: Number(DB_PORT ?? 5432),
+    database: DB_NAME,
+    user: DB_USER,
+    password: DB_PASSWORD,
+  });
   const db = drizzle({ client: pool, schema, casing: 'snake_case' });
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);

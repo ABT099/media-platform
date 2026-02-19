@@ -20,7 +20,7 @@ export class StorageService {
   private readonly cloudfrontDomain: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.bucket = this.configService.getOrThrow<string>('AWS_S3_BUCKET_NAME');
+    this.bucket = this.configService.getOrThrow<string>('S3_BUCKET');
     this.cloudfrontDomain = this.configService.getOrThrow<string>(
       'AWS_CLOUDFRONT_DOMAIN',
     );

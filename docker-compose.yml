@@ -3,9 +3,9 @@ services:
     image: postgres:18-alpine
     container_name: media_db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: media_platform
+      POSTGRES_USER: demouser
+      POSTGRES_PASSWORD: ChangeMe123!
+      POSTGRES_DB: cmsdb
     ports:
       - "5432:5432"
     volumes:
@@ -37,8 +37,22 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://admin:password@postgres:5432/media_platform
-      ELASTIC_NODE: http://elasticsearch:9200
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cmsdb
+      DB_USER: demouser
+      DB_PASSWORD: ChangeMe123!
+      OS_ENDPOINT: http://elasticsearch:9200
+      SQS_QUEUE_URL: ${SQS_QUEUE_URL}
+      S3_BUCKET: ${S3_BUCKET}
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_CLOUDFRONT_DOMAIN: ${AWS_CLOUDFRONT_DOMAIN}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     depends_on:
       - postgres
       - elasticsearch
@@ -51,12 +65,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: postgres://admin:password@postgres:5432/media_platform
-      REDIS_ADDR: redis:6379
-      CMS_URL: http://cms-service:3000
+      PORT: 8080
+      OS_ENDPOINT: http://elasticsearch:9200
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AWS_REGION: ${AWS_REGION}
     depends_on:
-      - postgres
       - redis
+      - elasticsearch
       - cms-service
 
 volumes:

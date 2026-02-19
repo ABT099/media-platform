@@ -31,7 +31,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	esStore, err := store.NewESStore(cfg.ElasticNode)
+	esStore, err := store.NewESStore(cfg.OSEndpoint)
 	if err != nil {
 		log.Fatalf("store: %v", err)
 	}

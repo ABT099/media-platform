@@ -13,7 +13,7 @@ export class SearchService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {
     this.client = new Client({
       node:
-        this.configService.get<string>('ELASTIC_NODE') ||
+        this.configService.get<string>('OS_ENDPOINT') ||
         'http://localhost:9200',
     });
   }

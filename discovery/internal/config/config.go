@@ -1,26 +1,30 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
 
 type Config struct {
-	DatabaseURL   string
+	OSEndpoint    string
 	RedisAddr     string
 	RedisPassword string
 	RedisUseTLS   bool
-	ElasticNode   string
+	AWSRegion     string
 	ServerPort    string
 }
 
 func Load() *Config {
+	redisHost := getEnv("REDIS_HOST", "localhost")
+	redisPort := getEnv("REDIS_PORT", "6379")
+
 	return &Config{
-		DatabaseURL:   getEnv("DATABASE_URL", "postgres://admin:password@localhost:5432/media_platform?sslmode=disable"),
-		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
+		OSEndpoint:    getEnv("OS_ENDPOINT", "http://localhost:9200"),
+		RedisAddr:     fmt.Sprintf("%s:%s", redisHost, redisPort),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		RedisUseTLS:   getEnvBool("REDIS_TLS", false),
-		ElasticNode:   getEnv("ELASTIC_NODE", "http://localhost:9200"),
+		AWSRegion:     getEnv("AWS_REGION", "us-east-1"),
 		ServerPort:    getEnv("PORT", "8080"),
 	}
 }

@@ -34,14 +34,19 @@ The CMS is an internal API for managing all media content. It handles the full c
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `ELASTIC_NODE` | Elasticsearch node URL |
+| `NODE_ENV` | Node environment (`development` / `production`) |
 | `PORT` | HTTP server port (default: `3000`) |
-| `AWS_REGION` | AWS region for S3 and SQS |
+| `DB_HOST` | PostgreSQL host |
+| `DB_PORT` | PostgreSQL port (default: `5432`) |
+| `DB_NAME` | Database name |
+| `DB_USER` | Database username |
+| `DB_PASSWORD` | Database password |
+| `OS_ENDPOINT` | OpenSearch endpoint URL (include `https://`) |
+| `SQS_QUEUE_URL` | Full SQS queue URL for the upload processing worker |
+| `S3_BUCKET` | S3 bucket name for video uploads |
+| `AWS_REGION` | AWS region |
 | `AWS_ACCESS_KEY_ID` | AWS access key ID |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret access key |
-| `AWS_S3_BUCKET_NAME` | S3 bucket name for video uploads |
-| `AWS_SQS_QUEUE_URL` | SQS queue URL for the upload processing worker |
 | `AWS_CLOUDFRONT_DOMAIN` | CloudFront domain used to build public video URLs |
 | `YOUTUBE_API_KEY` | YouTube Data API v3 key (required for playlist import) |
 | `JWT_SECRET` | Secret used to sign access JWTs (required for CMS auth; access tokens expire in 15m) |
@@ -66,12 +71,13 @@ Responses are cached in Redis with a short TTL to reduce load on Elasticsearch a
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_URL` | `postgres://admin:password@localhost:5432/media_platform?sslmode=disable` | PostgreSQL connection string |
-| `REDIS_ADDR` | `localhost:6379` | Redis address |
+| `PORT` | `8080` | HTTP server port |
+| `OS_ENDPOINT` | `http://localhost:9200` | OpenSearch endpoint URL (include `https://`) |
+| `REDIS_HOST` | `localhost` | Redis host |
+| `REDIS_PORT` | `6379` | Redis port |
 | `REDIS_PASSWORD` | _(empty)_ | Redis password |
 | `REDIS_TLS` | `false` | Enable TLS for Redis (`true`/`false`) |
-| `ELASTIC_NODE` | `http://localhost:9200` | Elasticsearch node URL |
-| `PORT` | `8080` | HTTP server port |
+| `AWS_REGION` | `us-east-1` | AWS region |
 
 ---
 
