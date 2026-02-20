@@ -1,118 +1,17 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "description": "User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes with full data. Responses are cached with a short TTL for scale.",
-    "title": "Discovery API",
-    "contact": {},
-    "version": "1.0"
-  },
-  "basePath": "/discovery",
-  "paths": {
-    "/search": {
-      "get": {
-        "description": "Retrieves a unified, relevance-ranked list of programs and episodes matching the query. Each item includes full data (type, id, title, description, and type-specific fields including videoUrl for episodes and extraInfo). Optional filters narrow by category or language. Results are paginated; use page and size to navigate. Responses are cached for 2 minutes.",
-        "tags": ["search"],
-        "summary": "Search programs and episodes",
-        "parameters": [
-          {
-            "type": "string",
-            "example": "فنجان",
-            "description": "Full-text search query across titles and descriptions",
-            "name": "q",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "example": "Culture",
-            "description": "Filter results by category (exact match)",
-            "name": "category",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "example": "ar",
-            "description": "Filter results by language code (e.g. ar, en)",
-            "name": "language",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "default": 1,
-            "description": "Page number, starts at 1",
-            "name": "page",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "default": 10,
-            "description": "Number of items per page (1–100, default 10)",
-            "name": "size",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Search results with full item data.",
-            "schema": { "$ref": "#/definitions/model.SearchResult" }
-          },
-          "400": {
-            "description": "Bad request — invalid page or size",
-            "schema": { "$ref": "#/definitions/handler.ErrorResponse" }
-          },
-          "500": {
-            "description": "Internal server error — Elasticsearch or cache unavailable",
-            "schema": { "$ref": "#/definitions/handler.ErrorResponse" }
-          }
+    "swagger": "2.0",
+    "info": {
+        "description": "User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes with full data. Responses are cached with a short TTL for scale.",
+        "title": "Discovery API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/discovery",
+    "paths": {},
+    "tags": [
+        {
+            "description": "Search across programs and episodes with filters and pagination",
+            "name": "search"
         }
-      }
-    }
-  },
-  "definitions": {
-    "handler.ErrorResponse": {
-      "type": "object",
-      "properties": { "error": { "type": "string" } }
-    },
-    "model.SearchItem": {
-      "type": "object",
-      "properties": {
-        "category": { "type": "string" },
-        "coverImageUrl": { "type": "string" },
-        "description": { "type": "string" },
-        "durationInSeconds": { "type": "integer" },
-        "episodeNumber": { "type": "integer" },
-        "extraInfo": { "type": "object" },
-        "id": { "type": "string" },
-        "language": { "type": "string" },
-        "programId": { "description": "episode-only", "type": "string" },
-        "programType": { "description": "program-only", "type": "string" },
-        "publicationDate": { "type": "string" },
-        "seasonNumber": { "type": "integer" },
-        "thumbnailUrl": { "type": "string" },
-        "title": { "type": "string" },
-        "type": {
-          "description": "\"program\" or \"episode\"",
-          "type": "string"
-        },
-        "videoUrl": { "description": "episode-only", "type": "string" }
-      }
-    },
-    "model.SearchResult": {
-      "type": "object",
-      "properties": {
-        "items": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/model.SearchItem" }
-        },
-        "limit": { "type": "integer" },
-        "page": { "type": "integer" },
-        "total": { "type": "integer" }
-      }
-    }
-  },
-  "tags": [
-    {
-      "description": "Unified search across programs and episodes with filters and pagination; returns full item data",
-      "name": "search"
-    }
-  ]
+    ]
 }

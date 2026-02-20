@@ -1,121 +1,13 @@
 basePath: /discovery
-definitions:
-  handler.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  model.SearchItem:
-    properties:
-      category:
-        type: string
-      coverImageUrl:
-        type: string
-      description:
-        type: string
-      durationInSeconds:
-        type: integer
-      episodeNumber:
-        type: integer
-      extraInfo:
-        type: object
-      id:
-        type: string
-      language:
-        type: string
-      programId:
-        description: episode-only
-        type: string
-      programType:
-        description: program-only
-        type: string
-      publicationDate:
-        type: string
-      seasonNumber:
-        type: integer
-      thumbnailUrl:
-        type: string
-      title:
-        type: string
-      type:
-        description: '"program" or "episode"'
-        type: string
-      videoUrl:
-        description: episode-only
-        type: string
-    type: object
-  model.SearchResult:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/model.SearchItem'
-        type: array
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-    type: object
 info:
   contact: {}
   description: User-facing read-only API for search and content discovery. Returns
-    a unified list of programs and episodes with full data. Responses are cached
-    with a short TTL for scale.
+    a unified list of programs and episodes with full data. Responses are cached with
+    a short TTL for scale.
   title: Discovery API
   version: "1.0"
-paths:
-  /search:
-    get:
-      description: Retrieves a unified, relevance-ranked list of programs and episodes
-        matching the query. Each item includes full data (type, id, title, description,
-        and type-specific fields including videoUrl for episodes and extraInfo).
-        Optional filters narrow by category or language. Results are paginated; use
-        page and size to navigate. Responses are cached for 2 minutes.
-      parameters:
-      - description: Full-text search query across titles and descriptions
-        example: فنجان
-        in: query
-        name: q
-        type: string
-      - description: Filter results by category (exact match)
-        example: Culture
-        in: query
-        name: category
-        type: string
-      - description: Filter results by language code (e.g. ar, en)
-        example: ar
-        in: query
-        name: language
-        type: string
-      - default: 1
-        description: Page number, starts at 1
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Number of items per page (1–100, default 10)
-        in: query
-        name: size
-        type: integer
-      responses:
-        "200":
-          description: Search results with full item data.
-          schema:
-            $ref: '#/definitions/model.SearchResult'
-        "400":
-          description: Bad request — invalid page or size
-          schema:
-            $ref: '#/definitions/handler.ErrorResponse'
-        "500":
-          description: Internal server error — Elasticsearch or cache unavailable
-          schema:
-            $ref: '#/definitions/handler.ErrorResponse'
-      summary: Search programs and episodes
-      tags:
-      - search
+paths: {}
 swagger: "2.0"
 tags:
-- description: Unified search across programs and episodes with filters and pagination;
-    returns full item data
+- description: Search across programs and episodes with filters and pagination
   name: search
