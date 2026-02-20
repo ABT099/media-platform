@@ -55,16 +55,7 @@ func main() {
 			"status": "ok",
 		})
 	})
-	// Swagger UI at /discovery/api/docs (same path shape as CMS /cms/api/docs); no redirect to index.html
-	v1.GET("/api/docs", func(c *gin.Context) {
-		c.Request.URL.Path = "/discovery/api/docs/index.html"
-		ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
-	})
-	v1.GET("/api/docs/", func(c *gin.Context) {
-		c.Request.URL.Path = "/discovery/api/docs/index.html"
-		ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
-	})
-	v1.GET("/api/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	v1.GET("/api/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("doc.json")))
 
 	if err := router.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatal(err)

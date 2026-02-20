@@ -4,7 +4,7 @@ A multi-service media platform for managing and discovering programs and episode
 
 CMS: [http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/api/docs](http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/api/docs)
 
-Discovery: [http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/discovery/api/docs](http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/discovery/api/docs)
+Discovery: [http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/discovery/api/docs/index.html](http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/discovery/api/docs/index.html)
 
 ---
 
@@ -66,7 +66,7 @@ The Discovery service is the public-facing, read-only API for end users. It expo
 
 - **Search** — `GET /discovery/search` — Unified full-text search across programs and episodes. Returns **full data** for each item (including `videoUrl`, `extraInfo`, and all type-specific fields). Supports optional filters (`category`, `language`) and pagination (`page`, `size`). Backed by Elasticsearch.
 - **Health** — `GET /discovery/health` — Liveness check.
-- **Swagger UI** — Available at `GET /discovery/api/docs`.
+- **Swagger UI** — Available at `GET /discovery/api/docs/index.html`.
 
 Responses are cached in Redis with a short TTL to reduce load on Elasticsearch at scale.
 
@@ -157,7 +157,7 @@ Once running, the services are available at:
 | CMS API | http://localhost:3000 |
 | CMS Swagger | http://localhost:3000/api/docs |
 | Discovery API | http://localhost:8080/discovery |
-| Discovery Swagger | http://localhost:8080/discovery/api/docs |
+| Discovery Swagger | http://localhost:8080/discovery/api/docs/index.html |
 | Elasticsearch | http://localhost:9200 |
 
 ---
@@ -221,4 +221,4 @@ go build -o discovery ./cmd/api/main.go
 ```
 
 The Discovery API will be available at http://localhost:8080.  
-Swagger UI: http://localhost:8080/swagger/index.html
+Swagger UI: http://localhost:8080/discovery/api/docs/index.html
