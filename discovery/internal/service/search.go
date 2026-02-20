@@ -130,15 +130,15 @@ func (s *SearchService) GetProgram(ctx context.Context, id string, episodePage, 
 	}
 
 	detail = model.ProgramDetail{
-		ID:         rawProgram.ID,
-		Title:      rawProgram.Title,
+		ID:          rawProgram.ID,
+		Title:       rawProgram.Title,
 		Description: rawProgram.Description,
-		Type:       model.ProgramType(rawProgram.Type),
-		Category:   rawProgram.Category,
-		Language:   rawProgram.Language,
-		CoverImage: rawProgram.CoverImageURL,
-		ExtraInfo:  rawProgram.ExtraInfo,
-		Episodes:   make([]model.EpisodeSummary, 0, len(episodes)),
+		Type:        model.ProgramType(rawProgram.Type),
+		Category:    rawProgram.Category,
+		Language:    rawProgram.Language,
+		CoverImage:  rawProgram.CoverImageURL,
+		ExtraInfo:   rawProgram.ExtraInfo,
+		Episodes:    make([]model.EpisodeSummary, 0, len(episodes)),
 	}
 	for _, e := range episodes {
 		detail.Episodes = append(detail.Episodes, model.EpisodeSummary{

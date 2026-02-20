@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Program, Episode } from '../database/schema';
-import { Client } from '@opensearch-project/opensearch';
+import { Client } from '@elastic/elasticsearch';
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -15,6 +15,10 @@ export class SearchService implements OnModuleInit {
       node:
         this.configService.get<string>('OS_ENDPOINT') ||
         'http://localhost:9200',
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      }
     });
   }
 
@@ -29,23 +33,21 @@ export class SearchService implements OnModuleInit {
         index: this.programsIndex,
       });
 
-      if (!programsExists.body) {
+      if (!programsExists) {
         await this.client.indices.create({
           index: this.programsIndex,
-          body: {
-            mappings: {
-              properties: {
-                id: { type: 'keyword' },
-                title: { type: 'text', analyzer: 'arabic' },
-                description: { type: 'text', analyzer: 'arabic' },
-                type: { type: 'keyword' },
-                category: { type: 'keyword' },
-                language: { type: 'keyword' },
-                coverImageUrl: { type: 'keyword' },
-                extraInfo: { type: 'object', dynamic: 'true' as const },
-                createdAt: { type: 'date' },
-                updatedAt: { type: 'date' },
-              },
+          mappings: {
+            properties: {
+              id: { type: 'keyword' },
+              title: { type: 'text', analyzer: 'arabic' },
+              description: { type: 'text', analyzer: 'arabic' },
+              type: { type: 'keyword' },
+              category: { type: 'keyword' },
+              language: { type: 'keyword' },
+              coverImageUrl: { type: 'keyword' },
+              extraInfo: { type: 'object', dynamic: true },
+              createdAt: { type: 'date' },
+              updatedAt: { type: 'date' },
             },
           },
         });
@@ -57,27 +59,25 @@ export class SearchService implements OnModuleInit {
         index: this.episodesIndex,
       });
 
-      if (!episodesExists.body) {
+      if (!episodesExists) {
         await this.client.indices.create({
           index: this.episodesIndex,
-          body: {
-            mappings: {
-              properties: {
-                id: { type: 'keyword' },
-                programId: { type: 'keyword' },
-                title: { type: 'text', analyzer: 'arabic' },
-                description: { type: 'text', analyzer: 'arabic' },
-                durationInSeconds: { type: 'integer' },
-                publicationDate: { type: 'date' },
-                videoUrl: { type: 'keyword' },
-                thumbnailUrl: { type: 'keyword' },
-                status: { type: 'keyword' },
-                episodeNumber: { type: 'integer' },
-                seasonNumber: { type: 'integer' },
-                extraInfo: { type: 'object', dynamic: 'true' as const },
-                createdAt: { type: 'date' },
-                updatedAt: { type: 'date' },
-              },
+          mappings: {
+            properties: {
+              id: { type: 'keyword' },
+              programId: { type: 'keyword' },
+              title: { type: 'text', analyzer: 'arabic' },
+              description: { type: 'text', analyzer: 'arabic' },
+              durationInSeconds: { type: 'integer' },
+              publicationDate: { type: 'date' },
+              videoUrl: { type: 'keyword' },
+              thumbnailUrl: { type: 'keyword' },
+              status: { type: 'keyword' },
+              episodeNumber: { type: 'integer' },
+              seasonNumber: { type: 'integer' },
+              extraInfo: { type: 'object', dynamic: true },
+              createdAt: { type: 'date' },
+              updatedAt: { type: 'date' },
             },
           },
         });
@@ -93,7 +93,7 @@ export class SearchService implements OnModuleInit {
       await this.client.index({
         index: this.programsIndex,
         id: program.id,
-        body: {
+        document: {
           id: program.id,
           title: program.title,
           description: program.description,
@@ -135,7 +135,7 @@ export class SearchService implements OnModuleInit {
       await this.client.index({
         index: this.episodesIndex,
         id: episode.id,
-        body: {
+        document: {
           id: episode.id,
           programId: episode.programId,
           title: episode.title,
