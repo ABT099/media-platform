@@ -15,113 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/episodes/{id}": {
-            "get": {
-                "description": "Retrieves a single episode by UUID including full detail (video URL, duration, season/episode numbers, publication date) and a brief summary of the parent program (id, title, cover image). Use this on the episode player page. Internal fields are omitted. Responses are cached for 3 minutes.",
-                "tags": [
-                    "episodes"
-                ],
-                "summary": "Get episode by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "223e4567-e89b-12d3-a456-426614174000",
-                        "description": "Episode UUID (e.g. 223e4567-e89b-12d3-a456-426614174000)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Episode retrieved successfully. The program field contains a lightweight program summary suitable for rendering a back-link or breadcrumb.",
-                        "schema": {
-                            "$ref": "#/definitions/model.EpisodeDetail"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request — id path parameter is missing or empty",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "404": {
-                        "description": "Episode not found — no episode exists with the given UUID",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error — Elasticsearch or cache unavailable",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            }
-        },
-        "/programs/{id}": {
-            "get": {
-                "description": "Retrieves a single program by UUID with a paginated list of its episodes ordered by season and episode number. Use episodePage and episodeSize to page through episodes (e.g. load 20 at a time on the program detail page). Internal fields (status, createdAt, updatedAt) are omitted — this is the public-facing view. Responses are cached for 3 minutes.",
-                "tags": [
-                    "programs"
-                ],
-                "summary": "Get program by ID with episodes",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "123e4567-e89b-12d3-a456-426614174000",
-                        "description": "Program UUID (e.g. 123e4567-e89b-12d3-a456-426614174000)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Episode list page number (starts at 1)",
-                        "name": "episodePage",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "Number of episodes per page (default 20, max 100)",
-                        "name": "episodeSize",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Program retrieved successfully with its episode list. Episodes are ordered by seasonNumber then episodeNumber ascending.",
-                        "schema": {
-                            "$ref": "#/definitions/model.ProgramDetail"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request — id path parameter is missing or empty",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "404": {
-                        "description": "Program not found — no program exists with the given UUID",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error — Elasticsearch or cache unavailable",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            }
-        },
         "/search": {
             "get": {
-                "description": "Retrieves a unified, relevance-ranked list of programs and episodes matching the query. Each item includes a type (\"program\" or \"episode\") and view fields only — no videoUrl is exposed in search results. Optional filters narrow by category or language. Results are paginated; use page and size to navigate. Responses are cached for 2 minutes for scale.",
+                "description": "Retrieves a unified, relevance-ranked list of programs and episodes matching the query. Each item includes full data (type, id, title, description, and type-specific fields including videoUrl for episodes and extraInfo). Optional filters narrow by category or language. Results are paginated; use page and size to navigate. Responses are cached for 2 minutes.",
                 "tags": [
                     "search"
                 ],
@@ -165,15 +61,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Search results retrieved successfully. Items are a flat mixed list; use the type field to distinguish programs from episodes.",
+                        "description": "Search results with full item data.",
                         "schema": {
                             "$ref": "#/definitions/model.SearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request — invalid page or size",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error — Elasticsearch or cache unavailable",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
@@ -181,134 +83,13 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.EpisodeDetail": {
+        "handler.ErrorResponse": {
             "type": "object",
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "durationInSeconds": {
-                    "type": "integer"
-                },
-                "episodeNumber": {
-                    "type": "integer"
-                },
-                "extraInfo": {
-                    "type": "object"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "program": {
-                    "$ref": "#/definitions/model.ProgramSummary"
-                },
-                "publicationDate": {
-                    "type": "string"
-                },
-                "seasonNumber": {
-                    "type": "integer"
-                },
-                "thumbnailUrl": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "videoUrl": {
+                "error": {
                     "type": "string"
                 }
             }
-        },
-        "model.EpisodeSummary": {
-            "type": "object",
-            "properties": {
-                "durationInSeconds": {
-                    "type": "integer"
-                },
-                "episodeNumber": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "publicationDate": {
-                    "type": "string"
-                },
-                "seasonNumber": {
-                    "type": "integer"
-                },
-                "thumbnailUrl": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "videoUrl": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ProgramDetail": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "coverImageUrl": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "episodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.EpisodeSummary"
-                    }
-                },
-                "extraInfo": {
-                    "type": "object"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/model.ProgramType"
-                }
-            }
-        },
-        "model.ProgramSummary": {
-            "type": "object",
-            "properties": {
-                "coverImageUrl": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ProgramType": {
-            "type": "string",
-            "enum": [
-                "podcast",
-                "documentary",
-                "series"
-            ],
-            "x-enum-varnames": [
-                "ProgramTypePodcast",
-                "ProgramTypeDocumentary",
-                "ProgramTypeSeries"
-            ]
         },
         "model.SearchItem": {
             "type": "object",
@@ -327,6 +108,9 @@ const docTemplate = `{
                 },
                 "episodeNumber": {
                     "type": "integer"
+                },
+                "extraInfo": {
+                    "type": "object"
                 },
                 "id": {
                     "type": "string"
@@ -357,6 +141,10 @@ const docTemplate = `{
                 "type": {
                     "description": "\"program\" or \"episode\"",
                     "type": "string"
+                },
+                "videoUrl": {
+                    "description": "episode-only",
+                    "type": "string"
                 }
             }
         },
@@ -383,16 +171,8 @@ const docTemplate = `{
     },
     "tags": [
         {
-            "description": "Search endpoints - Unified search across programs and episodes with filters and pagination",
+            "description": "Unified search across programs and episodes with filters and pagination; returns full item data",
             "name": "search"
-        },
-        {
-            "description": "Program endpoints - Get program details by ID with paginated episode list",
-            "name": "programs"
-        },
-        {
-            "description": "Episode endpoints - Get episode details by ID including parent program summary",
-            "name": "episodes"
         }
     ]
 }`
@@ -404,7 +184,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/discovery",
 	Schemes:          []string{},
 	Title:            "Discovery API",
-	Description:      "User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes. Program and episode detail endpoints return full content with optional episode pagination. Responses are cached with a short TTL for scale.",
+	Description:      "User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes with full data. Responses are cached with a short TTL for scale.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

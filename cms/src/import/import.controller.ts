@@ -27,7 +27,17 @@ export class ImportController {
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'No provider found for this URL' })
+  @ApiResponse({
+    status: 400,
+    description: 'Unsupported URL or provider/YouTube API error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'No provider found for this URL',
+        error: 'Bad Request',
+      },
+    },
+  })
   importFromUrl(@Body() dto: ImportFromUrlDto) {
     return this.importService.importFromUrl(dto.url);
   }

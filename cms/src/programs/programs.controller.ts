@@ -141,8 +141,7 @@ export class ProgramsController {
   })
   @ApiParam({
     name: 'id',
-    description: 'Program UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Program UUID',
   })
   @ApiResponse({
     status: 200,
@@ -198,8 +197,7 @@ export class ProgramsController {
   @UseInterceptors(FileInterceptor('coverImage'))
   @ApiParam({
     name: 'id',
-    description: 'Program UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Program UUID',
   })
   @ApiResponse({
     status: 200,
@@ -215,6 +213,19 @@ export class ProgramsController {
         coverImageUrl: 'https://cdn.example.com/thumbnails/uuid-new-cover.jpg',
         createdAt: '2024-02-17T14:30:00.000Z',
         updatedAt: '2024-02-18T10:15:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input - validation failed',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: [
+          'type must be one of: podcast, documentary, series',
+        ],
+        error: 'Bad Request',
       },
     },
   })
@@ -245,8 +256,7 @@ export class ProgramsController {
   })
   @ApiParam({
     name: 'id',
-    description: 'Program UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Program UUID',
   })
   @ApiResponse({
     status: 200,

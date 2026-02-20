@@ -2,14 +2,10 @@
 //
 //	@title			Discovery API
 //	@version		1.0
-//	@description	User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes. Program and episode detail endpoints return full content with optional episode pagination. Responses are cached with a short TTL for scale.
+//	@description	User-facing read-only API for search and content discovery. Returns a unified list of programs and episodes with full data. Responses are cached with a short TTL for scale.
 //	@BasePath		/discovery
 //	@tag.name		search
-//	@tag.description	Search endpoints - Unified search across programs and episodes with filters and pagination
-//	@tag.name		programs
-//	@tag.description	Program endpoints - Get program details by ID with paginated episode list
-//	@tag.name		episodes
-//	@tag.description	Episode endpoints - Get episode details by ID including parent program summary
+//	@tag.description	Search across programs and episodes with filters and pagination
 package main
 
 import (
@@ -54,14 +50,21 @@ func main() {
 	
 	v1 := router.Group("/discovery")
 	v1.GET("/search", searchHandler.Search)
-	v1.GET("/programs/:id", searchHandler.GetProgram)
-	v1.GET("/episodes/:id", searchHandler.GetEpisode)
 	v1.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
 		})
 	})
-	v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Swagger UI at /discovery/api/docs (same path shape as CMS /cms/api/docs); no redirect to index.html
+	v1.GET("/api/docs", func(c *gin.Context) {
+		c.Request.URL.Path = "/discovery/api/docs/index.html"
+		ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
+	})
+	v1.GET("/api/docs/", func(c *gin.Context) {
+		c.Request.URL.Path = "/discovery/api/docs/index.html"
+		ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
+	})
+	v1.GET("/api/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if err := router.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatal(err)

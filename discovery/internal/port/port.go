@@ -11,11 +11,9 @@ import (
 
 var ErrNotFound = errors.New("not found")
 
-// Searcher is the port for search and detail operations
+// Searcher is the port for search operations.
 type Searcher interface {
 	Search(ctx context.Context, query, category, language string, page, limit int) (*model.SearchResult, error)
-	GetProgram(ctx context.Context, id string, episodePage, episodeSize int) (*model.ProgramDetail, error)
-	GetEpisode(ctx context.Context, id string) (*model.EpisodeDetail, error)
 }
 
 // RawProgram is the store output shape for a program document (ES/DB raw).
@@ -59,9 +57,6 @@ type Hit struct {
 // Store is the port for persistence (service depends on this; store package implements it).
 type Store interface {
 	SearchMultiIndex(ctx context.Context, query, category, language string, from, size int) (hits []Hit, total int, err error)
-	GetProgram(ctx context.Context, id string) (*RawProgram, error)
-	GetEpisode(ctx context.Context, id string) (*RawEpisode, error)
-	GetEpisodesByProgramID(ctx context.Context, programID string, size, from int) ([]RawEpisode, error)
 }
 
 // Cache is the port for caching (service depends on this; cache package implements it).

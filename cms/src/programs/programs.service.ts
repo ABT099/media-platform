@@ -8,6 +8,7 @@ import {
   ProgramUpdatedEvent,
   ProgramDeletedEvent,
 } from 'src/common/events/program.events';
+import { EpisodeDeletedEvent } from 'src/common/events/episode.events';
 import { ProgramsRepository } from './programs.repository';
 import { EpisodesRepository } from '../episodes/episodes.repository';
 import {
@@ -98,6 +99,8 @@ export class ProgramsService {
   }
 
   async remove(id: string) {
+    const episodes = await this.episodesRepository.findByProgramId(id);
+
     const program = await this.programsRepository.delete(id);
 
     if (!program) {
@@ -108,6 +111,13 @@ export class ProgramsService {
       'program.deleted',
       new ProgramDeletedEvent(program.id),
     );
+
+    for (const episode of episodes) {
+      this.eventEmitter.emit(
+        'episode.deleted',
+        new EpisodeDeletedEvent(episode.id),
+      );
+    }
 
     return { message: 'Program deleted successfully', id };
   }

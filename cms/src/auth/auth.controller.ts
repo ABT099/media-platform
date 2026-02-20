@@ -32,6 +32,17 @@ export class AuthController {
       },
     },
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input - validation failed',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['email must be an email', 'password should not be empty'],
+        error: 'Bad Request',
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
   async login(@Body() dto: LoginDto): Promise<TokenResponse> {
     return this.authService.login(dto.email, dto.password);

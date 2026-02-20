@@ -17,17 +17,17 @@ services:
     ports:
       - "6379:6379"
 
-  elasticsearch:
-    image: elasticsearch:9.3.0
+  opensearch:
+    image: opensearchproject/opensearch:latest
     container_name: media_search
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=false
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
     ports:
       - "9200:9200"
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - os_data:/usr/share/opensearch/data
 
   cms-service:
     build:
@@ -44,7 +44,7 @@ services:
       DB_NAME: cmsdb
       DB_USER: demouser
       DB_PASSWORD: ChangeMe123!
-      OS_ENDPOINT: http://elasticsearch:9200
+      OS_ENDPOINT: http://opensearch:9200
       SQS_QUEUE_URL: ${SQS_QUEUE_URL}
       S3_BUCKET: ${S3_BUCKET}
       AWS_REGION: ${AWS_REGION}
@@ -55,7 +55,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     depends_on:
       - postgres
-      - elasticsearch
+      - opensearch
 
   discovery-service:
     build:
@@ -66,15 +66,15 @@ services:
       - "8080:8080"
     environment:
       PORT: 8080
-      OS_ENDPOINT: http://elasticsearch:9200
+      OS_ENDPOINT: http://opensearch:9200
       REDIS_HOST: redis
       REDIS_PORT: 6379
       AWS_REGION: ${AWS_REGION}
     depends_on:
       - redis
-      - elasticsearch
+      - opensearch
       - cms-service
 
 volumes:
   postgres_data:
-  es_data:
+  os_data:

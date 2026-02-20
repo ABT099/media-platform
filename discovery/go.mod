@@ -10,7 +10,6 @@ require (
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
 	github.com/swaggo/swag v1.16.3
-	golang.org/x/sync v0.19.0
 )
 
 require (

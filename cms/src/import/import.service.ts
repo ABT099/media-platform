@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { ContentProvider } from './interfaces/content-provider.interface';
 import { YoutubeProvider } from './providers/youtube.provider';
 import { DB, type DrizzleDB } from 'src/database/database.provider';
@@ -31,7 +31,7 @@ export class ImportService {
   async importFromUrl(url: string) {
     const provider = this.providers.find((p) => p.canHandle(url));
     if (!provider) {
-      throw new NotFoundException('No provider found for this URL');
+      throw new BadRequestException('No provider found for this URL');
     }
 
     const { program: programDto, episodes: episodeDtos } =

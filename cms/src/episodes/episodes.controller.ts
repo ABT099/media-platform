@@ -49,8 +49,7 @@ export class EpisodesController {
   @UseInterceptors(FileInterceptor('thumbnail'))
   @ApiParam({
     name: 'programId',
-    description: 'Program UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Program UUID',
   })
   @ApiResponse({
     status: 201,
@@ -124,8 +123,7 @@ export class EpisodesController {
   })
   @ApiParam({
     name: 'programId',
-    description: 'Program UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Program UUID',
   })
   @ApiQuery({
     name: 'page',
@@ -209,8 +207,7 @@ export class EpisodesController {
   })
   @ApiParam({
     name: 'id',
-    description: 'Episode UUID (e.g., 223e4567-e89b-12d3-a456-426614174000)',
-    example: '223e4567-e89b-12d3-a456-426614174000',
+    description: 'Episode UUID',
   })
   @ApiResponse({
     status: 200,
@@ -259,8 +256,7 @@ export class EpisodesController {
   @UseInterceptors(FileInterceptor('thumbnail'))
   @ApiParam({
     name: 'id',
-    description: 'Episode UUID (e.g., 223e4567-e89b-12d3-a456-426614174000)',
-    example: '223e4567-e89b-12d3-a456-426614174000',
+    description: 'Episode UUID',
   })
   @ApiResponse({
     status: 200,
@@ -280,6 +276,20 @@ export class EpisodesController {
         publicationDate: '2024-02-17T14:30:00.000Z',
         createdAt: '2024-02-17T14:30:00.000Z',
         updatedAt: '2024-02-18T10:15:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input - validation failed',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: [
+          'durationInSeconds must be a positive integer',
+          'episodeNumber must be at least 1',
+        ],
+        error: 'Bad Request',
       },
     },
   })
@@ -310,8 +320,7 @@ export class EpisodesController {
   })
   @ApiParam({
     name: 'id',
-    description: 'Episode UUID (e.g., 223e4567-e89b-12d3-a456-426614174000)',
-    example: '223e4567-e89b-12d3-a456-426614174000',
+    description: 'Episode UUID',
   })
   @ApiResponse({
     status: 200,
@@ -346,8 +355,7 @@ export class EpisodesController {
   })
   @ApiParam({
     name: 'id',
-    description: 'Episode UUID (e.g., 223e4567-e89b-12d3-a456-426614174000)',
-    example: '223e4567-e89b-12d3-a456-426614174000',
+    description: 'Episode UUID',
   })
   @ApiResponse({
     status: 200,

@@ -68,6 +68,11 @@ export class PublicationService {
       updatedAt: new Date(),
     });
 
+    this.eventEmitter.emit(
+      'episode.status_changed',
+      new EpisodeStatusChangedEvent(updatedEpisode!),
+    );
+
     return updatedEpisode!;
   }
 
@@ -116,6 +121,11 @@ export class PublicationService {
       publicationDate: null,
       updatedAt: new Date(),
     });
+
+    this.eventEmitter.emit(
+      'episode.status_changed',
+      new EpisodeStatusChangedEvent(updatedEpisode!),
+    );
 
     return updatedEpisode!;
   }

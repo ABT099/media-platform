@@ -3,20 +3,15 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"discovery/internal/model"
 	"discovery/internal/port"
-
-	"golang.org/x/sync/errgroup"
 )
 
 const (
 	searchCacheTTL = 2 * time.Minute
-	detailCacheTTL = 3 * time.Minute
-	defaultEpSize  = 20
 	indexPrograms  = "programs"
 )
 
@@ -69,6 +64,7 @@ func hitToSearchItem(h port.Hit) (model.SearchItem, error) {
 		item.Category = &p.Category
 		item.Language = &p.Language
 		item.CoverImage = p.CoverImageURL
+		item.ExtraInfo = p.ExtraInfo
 		return item, nil
 	}
 	var e port.RawEpisode
@@ -81,119 +77,11 @@ func hitToSearchItem(h port.Hit) (model.SearchItem, error) {
 	item.Description = e.Description
 	item.ProgramID = &e.ProgramID
 	item.ThumbnailURL = e.ThumbnailURL
+	item.VideoURL = e.VideoURL
 	item.DurationSeconds = &e.DurationInSeconds
 	item.EpisodeNumber = &e.EpisodeNumber
 	item.SeasonNumber = e.SeasonNumber
 	item.PublicationDate = e.PublicationDate
+	item.ExtraInfo = e.ExtraInfo
 	return item, nil
-}
-
-// GetProgram implements port.Searcher.
-func (s *SearchService) GetProgram(ctx context.Context, id string, episodePage, episodeSize int) (*model.ProgramDetail, error) {
-	key := fmt.Sprintf("program|%s", id)
-	var detail model.ProgramDetail
-	if err := s.cache.Get(ctx, key, &detail); err == nil {
-		return &detail, nil
-	}
-	if episodeSize <= 0 {
-		episodeSize = defaultEpSize
-	}
-	if episodePage <= 0 {
-		episodePage = 1
-	}
-	from := (episodePage - 1) * episodeSize
-
-	var rawProgram *port.RawProgram
-	var episodes []port.RawEpisode
-	g, gctx := errgroup.WithContext(ctx)
-	g.Go(func() error {
-		p, err := s.store.GetProgram(gctx, id)
-		if err != nil {
-			return err
-		}
-		rawProgram = p
-		return nil
-	})
-	g.Go(func() error {
-		eps, err := s.store.GetEpisodesByProgramID(gctx, id, episodeSize, from)
-		if err != nil {
-			return err
-		}
-		episodes = eps
-		return nil
-	})
-	if err := g.Wait(); err != nil {
-		if errors.Is(err, port.ErrNotFound) {
-			return nil, port.ErrNotFound
-		}
-		return nil, err
-	}
-
-	detail = model.ProgramDetail{
-		ID:          rawProgram.ID,
-		Title:       rawProgram.Title,
-		Description: rawProgram.Description,
-		Type:        model.ProgramType(rawProgram.Type),
-		Category:    rawProgram.Category,
-		Language:    rawProgram.Language,
-		CoverImage:  rawProgram.CoverImageURL,
-		ExtraInfo:   rawProgram.ExtraInfo,
-		Episodes:    make([]model.EpisodeSummary, 0, len(episodes)),
-	}
-	for _, e := range episodes {
-		detail.Episodes = append(detail.Episodes, model.EpisodeSummary{
-			ID:              e.ID,
-			Title:           e.Title,
-			ThumbnailURL:    e.ThumbnailURL,
-			VideoURL:        e.VideoURL,
-			DurationSeconds: &e.DurationInSeconds,
-			EpisodeNumber:   &e.EpisodeNumber,
-			SeasonNumber:    e.SeasonNumber,
-			PublicationDate: e.PublicationDate,
-		})
-	}
-	_ = s.cache.Set(ctx, key, &detail, detailCacheTTL)
-	return &detail, nil
-}
-
-// GetEpisode implements port.Searcher.
-func (s *SearchService) GetEpisode(ctx context.Context, id string) (*model.EpisodeDetail, error) {
-	key := fmt.Sprintf("episode|%s", id)
-	var detail model.EpisodeDetail
-	if err := s.cache.Get(ctx, key, &detail); err == nil {
-		return &detail, nil
-	}
-
-	rawEpisode, err := s.store.GetEpisode(ctx, id)
-	if err != nil {
-		if errors.Is(err, port.ErrNotFound) {
-			return nil, port.ErrNotFound
-		}
-		return nil, err
-	}
-
-	rawProgram, _ := s.store.GetProgram(ctx, rawEpisode.ProgramID)
-
-	detail = model.EpisodeDetail{
-		ID:              rawEpisode.ID,
-		Title:           rawEpisode.Title,
-		Description:     rawEpisode.Description,
-		VideoURL:        rawEpisode.VideoURL,
-		ThumbnailURL:    rawEpisode.ThumbnailURL,
-		DurationSeconds: &rawEpisode.DurationInSeconds,
-		EpisodeNumber:   &rawEpisode.EpisodeNumber,
-		SeasonNumber:    rawEpisode.SeasonNumber,
-		PublicationDate: rawEpisode.PublicationDate,
-		ExtraInfo:       rawEpisode.ExtraInfo,
-		Program:         model.ProgramSummary{},
-	}
-	if rawProgram != nil {
-		detail.Program = model.ProgramSummary{
-			ID:         rawProgram.ID,
-			Title:      rawProgram.Title,
-			CoverImage: rawProgram.CoverImageURL,
-		}
-	}
-	_ = s.cache.Set(ctx, key, &detail, detailCacheTTL)
-	return &detail, nil
 }

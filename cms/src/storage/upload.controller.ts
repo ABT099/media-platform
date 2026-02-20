@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -16,6 +16,7 @@ export class UploadController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post('sign-video')
+  @HttpCode(200)
   @ApiOperation({
     summary: 'Generate presigned URL for video upload (fallback / replacement)',
     description:
@@ -34,7 +35,7 @@ if no publicationDate is set the episode will be published immediately; if a fut
         description:
           'The presigned URL from episode creation expired (1 hour). Request a fresh one.',
         value: {
-          episodeId: '223e4567-e89b-12d3-a456-426614174000',
+          episodeId: '',
           fileName: 'episode-1.mp4',
           contentType: 'video/mp4',
         },
@@ -44,7 +45,7 @@ if no publicationDate is set the episode will be published immediately; if a fut
         description:
           'Upload a different video file to an episode that already has a video.',
         value: {
-          episodeId: '223e4567-e89b-12d3-a456-426614174000',
+          episodeId: '',
           fileName: 'episode-1-v2.mp4',
           contentType: 'video/mp4',
         },
@@ -52,7 +53,7 @@ if no publicationDate is set the episode will be published immediately; if a fut
     },
   })
   @ApiResponse({
-    status: 201,
+    status: 200,
     description: 'Presigned URL generated successfully',
     schema: {
       example: {
