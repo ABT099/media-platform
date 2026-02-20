@@ -2,6 +2,10 @@
 
 A multi-service media platform for managing and discovering programs and episodes. It is composed of two backend services backed by PostgreSQL, Elasticsearch, and Redis.
 
+CMS: [http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/api/docs](http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/api/docs)
+
+Discovery: [http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/discovery/api/docs](http://demo-alb-2013344176.us-east-1.elb.amazonaws.com/discovery/api/docs)
+
 ---
 
 ## Table of Contents
@@ -58,12 +62,11 @@ The CMS is an internal API for managing all media content. It handles the full c
 
 > `discovery/` — Go (Gin) · Port `8080`
 
-The Discovery service is the public-facing, read-only API for end users. It is optimized for scale through response caching:
+The Discovery service is the public-facing, read-only API for end users. It exposes a single search endpoint and is optimized for scale through response caching:
 
-- **Search** — `GET /search` — Unified full-text search across programs and episodes with filters and pagination, backed by Elasticsearch.
-- **Program detail** — `GET /programs/:id` — Returns full program details with a paginated list of its episodes.
-- **Episode detail** — `GET /episodes/:id` — Returns episode details including a summary of its parent program.
-- **Swagger UI** — Available at `GET /swagger/index.html`.
+- **Search** — `GET /discovery/search` — Unified full-text search across programs and episodes. Returns **full data** for each item (including `videoUrl`, `extraInfo`, and all type-specific fields). Supports optional filters (`category`, `language`) and pagination (`page`, `size`). Backed by Elasticsearch.
+- **Health** — `GET /discovery/health` — Liveness check.
+- **Swagger UI** — Available at `GET /discovery/api/docs`.
 
 Responses are cached in Redis with a short TTL to reduce load on Elasticsearch at scale.
 
@@ -153,8 +156,8 @@ Once running, the services are available at:
 |---|---|
 | CMS API | http://localhost:3000 |
 | CMS Swagger | http://localhost:3000/api/docs |
-| Discovery API | http://localhost:8080 |
-| Discovery Swagger | http://localhost:8080/swagger/index.html |
+| Discovery API | http://localhost:8080/discovery |
+| Discovery Swagger | http://localhost:8080/discovery/api/docs |
 | Elasticsearch | http://localhost:9200 |
 
 ---
